@@ -24,6 +24,13 @@ use Symfony\Component\HttpFoundation\Request;
 abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface, SwagenActionProducesErrorCodesInterface
 {
 
+    public static function producesHttpErrorStatusCodes()
+    {
+        return [
+            Response::HTTP_INTERNAL_SERVER_ERROR,
+        ];
+    }
+
     /**
      * Коды ошибок, которые возвращаются в этом экшне
      *
@@ -165,6 +172,11 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
         } catch (\Throwable $e) {
             // do nothing...
         }
+    }
+
+    public function isResponseExampleRequested()
+    {
+        return $this->request->query->has('fakeRequest');
     }
 
     /**

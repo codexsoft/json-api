@@ -4,6 +4,7 @@ namespace CodexSoft\JsonApi;
 
 use CodexSoft\Code\AbstractModuleSchema;
 use CodexSoft\Code\Helpers\Strings;
+use CodexSoft\JsonApi\Form\Field;
 
 class JsonApiSchema extends AbstractModuleSchema
 {
@@ -19,6 +20,9 @@ class JsonApiSchema extends AbstractModuleSchema
 
     /** @var string */
     private $pathToForms;
+
+    /** @var string  */
+    private $fieldHelperClass = Field::class;
 
     /**
      * @param string $namespaceActions
@@ -94,6 +98,25 @@ class JsonApiSchema extends AbstractModuleSchema
     public function getPathToForms(): string
     {
         return $this->pathToForms ?: $this->pathToPsrRoot.'/'.Strings::bs2s($this->getNamespaceForms());
+    }
+
+    /**
+     * @param string $fieldHelperClass
+     *
+     * @return JsonApiSchema
+     */
+    public function setFieldHelperClass(string $fieldHelperClass): JsonApiSchema
+    {
+        $this->fieldHelperClass = $fieldHelperClass;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFieldHelperClass(): string
+    {
+        return $this->fieldHelperClass;
     }
 
 }

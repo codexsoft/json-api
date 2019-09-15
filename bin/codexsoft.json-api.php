@@ -7,7 +7,7 @@ use Symfony\Component\Console\Command\Command;
 
 require_once __DIR__.'/findautoloader.php';
 $jsonApiConfigFile = Cli::getFirstArgumentOrDie();
-$jsonApiSchema = \CodexSoft\JsonApi\JsonApiTools::getFromConfigFile($jsonApiConfigFile);
+$jsonApiSchema = \CodexSoft\JsonApi\JsonApiSchema::getFromConfigFile($jsonApiConfigFile);
 
 $console = new \Symfony\Component\Console\Application('CodexSoft JSON API tools CLI');
 
@@ -18,6 +18,8 @@ $commandList = [
 
     //'add-action' => (new \CodexSoft\WebServer\Operations\CreateActionOperation)
     //    ->setWebServerSchema($jsonApiSchema),
+
+    'action' => (new \CodexSoft\JsonApi\Command\CreateActionCommand)->setJsonApiTools($jsonApi),
 
     'add-action' => new ExecuteOperationCommand($jsonApi->generateAction(), function(array $options, CreateActionOperation $operation) {
         $operation->setNewActionName($options[0]);

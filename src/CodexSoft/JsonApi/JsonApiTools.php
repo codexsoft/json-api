@@ -19,31 +19,12 @@ class JsonApiTools
         $this->operationsProcessor = new OperationsProcessor;
     }
 
-    public function generateAction()
+    public function generateAction(): CreateActionOperation
     {
         $operation = (new CreateActionOperation)
-            ->setWebServerSchema($this->config)
+            ->setJsonApiSchema($this->config)
             ->setOperationsProcessor($this->operationsProcessor);
         return $operation;
-    }
-
-    /**
-     * @param string $domainConfigFile
-     *
-     * @return static
-     * @throws \Exception
-     */
-    public static function getFromConfigFile(string $domainConfigFile): self
-    {
-        ob_start();
-        $domainSchema = include $domainConfigFile;
-        ob_end_clean();
-
-        if (!$domainSchema instanceof static) {
-            throw new \Exception("File $domainConfigFile does not return valid ".static::class."!\n");
-        }
-
-        return $domainSchema;
     }
 
     /**

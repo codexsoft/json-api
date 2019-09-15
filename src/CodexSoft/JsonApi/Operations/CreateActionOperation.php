@@ -4,9 +4,9 @@ namespace CodexSoft\JsonApi\Operations;
 use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\Code\Helpers\Strings;
 use CodexSoft\Code\Shortcuts;
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\JsonApi\DocumentedFormAction;
 use CodexSoft\JsonApi\Form\AbstractForm;
-use CodexSoft\JsonApi\Form\BaseField;
+use CodexSoft\JsonApi\Form\Field;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
 use CodexSoft\OperationsSystem\Exception\OperationException;
 use CodexSoft\OperationsSystem\Operation;
@@ -23,8 +23,6 @@ use const CodexSoft\Code\TAB;
  */
 class CreateActionOperation extends Operation
 {
-    use Loggable;
-
     public const ID = 'e115e45a-aa2a-4473-a4e0-9e4398cb3215';
     protected const ERROR_PREFIX = 'CreateActionOperation cannot be completed: ';
 
@@ -50,7 +48,7 @@ class CreateActionOperation extends Operation
     private $route;
 
     /** @var JsonApiSchema */
-    private $webServerSchema;
+    private $jsonApiSchema;
 
     /** @var Filesystem */
     private $fs;
@@ -83,7 +81,7 @@ class CreateActionOperation extends Operation
         Shortcuts::register();
 
         $this->fs = new Filesystem();
-        $this->logger->debug('Actions path: '.$this->webServerSchema->getPathToActions());
+        $this->getLogger()->debug('Actions path: '.$this->jsonApiSchema->getPathToActions());
 
         $actionClass = (string) str($this->newActionName)->replace('/','\\')->replace('.','\\');
         $actionClassParts = explode('\\',$actionClass);
@@ -96,7 +94,7 @@ class CreateActionOperation extends Operation
         \array_pop($actionNamespaceParts);
         $actionNamespace = implode('\\',$actionNamespaceParts);
 
-        $baseActionsNamespace = $this->webServerSchema->getNamespaceActions();
+        $baseActionsNamespace = $this->jsonApiSchema->getNamespaceActions();
 
         if ($actionNamespace) {
             $this->fqnActionClass = $baseActionsNamespace.'\\'.$actionClass;
@@ -109,25 +107,14 @@ class CreateActionOperation extends Operation
         //$this->shortActionFormClass = $this->shortActionClass.'Form';
         $this->fqnActionFormClass = $this->fqnActionClass.'Form';
         $this->fqnActionResponseClass = $this->fqnActionClass.'Response';
-        $this->actionDir = $this->webServerSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
+        $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
         $this->actionNamespace = Classes::getNamespace($this->fqnActionClass);
 
-        $this->logger->debug('Action class: '.$this->fqnActionClass);
+        $this->getLogger()->debug('Action class: '.$this->fqnActionClass);
 
         $this->writeActionClassFile();
         $this->writeActionFormClassFile();
         $this->writeActionResponseClassFile();
-    }
-
-    /**
-     * @param string $actionNamespace
-     *
-     * @return CreateActionOperation
-     */
-    public function setActionNamespace(string $actionNamespace): CreateActionOperation
-    {
-        $this->actionNamespace = $actionNamespace;
-        return $this;
     }
 
     /**
@@ -142,13 +129,13 @@ class CreateActionOperation extends Operation
     }
 
     /**
-     * @param JsonApiSchema $webServerSchema
+     * @param JsonApiSchema $jsonApiSchema
      *
      * @return static
      */
-    public function setWebServerSchema(JsonApiSchema $webServerSchema): self
+    public function setJsonApiSchema(JsonApiSchema $jsonApiSchema): self
     {
-        $this->webServerSchema = $webServerSchema;
+        $this->jsonApiSchema = $jsonApiSchema;
         return $this;
     }
 
@@ -157,7 +144,7 @@ class CreateActionOperation extends Operation
      */
     protected function generateActionClassCode(): string
     {
-        $documentedFormActionClass = \App\Api\Action\DocumentedFormAction::class;
+        $documentedFormActionClass = DocumentedFormAction::class;
         $responseClass = \Symfony\Component\HttpFoundation\Response::class;
         $routeAnnotationClass = \Symfony\Component\Routing\Annotation\Route::class;
 
@@ -207,7 +194,7 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionFile)) {
             throw new \RuntimeException("Action file $actionFile already exists!");
         }
-        $this->logger->debug("Will be written to $actionFile");
+        $this->getLogger()->debug("Will be written to $actionFile");
 
         $this->fs->dumpFile($actionFile, $this->generateActionClassCode());
     }
@@ -215,7 +202,7 @@ class CreateActionOperation extends Operation
     protected function generateActionFormClassCode()
     {
         $baseFormClass = AbstractForm::class;
-        $fieldClass = BaseField::class;
+        $fieldClass = Field::class;
         $swagenInterface = \CodexSoft\JsonApi\Swagen\Interfaces\SwagenInterface::class;
         $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
 
@@ -255,14 +242,14 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionFormFile)) {
             throw new \RuntimeException("Action form file $actionFormFile already exists!");
         }
-        $this->logger->debug("Will be written to $actionFormFile");
+        $this->getLogger()->debug("Will be written to $actionFormFile");
 
         $this->fs->dumpFile($actionFormFile, $this->generateActionFormClassCode());
     }
 
     protected function generateActionResponseFormClassCode(): string
     {
-        $fieldClass = BaseField::class;
+        $fieldClass = Field::class;
         $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
         $baseSuccessResponseClass = DefaultSuccessResponse::class;
 
@@ -313,7 +300,7 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionResponseFile)) {
             throw new \RuntimeException("Action response file $actionResponseFile already exists!");
         }
-        $this->logger->debug("Will be written to $actionResponseFile");
+        $this->getLogger()->debug("Will be written to $actionResponseFile");
 
         $this->fs->dumpFile($actionResponseFile, $this->generateActionResponseFormClassCode());
     }

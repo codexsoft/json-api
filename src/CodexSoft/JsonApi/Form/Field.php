@@ -5,7 +5,7 @@ namespace CodexSoft\JsonApi\Form;
 use CodexSoft\JsonApi\Form\Fields;
 use Symfony\Component\Form\FormBuilderInterface;
 
-class BaseField
+class Field
 {
 
     public static function text(string $label = '', array $constraints = [], array $options = []): Fields\TextField
