@@ -30,6 +30,256 @@ class SymfonyGenerateFormDocumentation
     /**
      * @param $formClass
      *
+     * @return FormDocumentation
+     * @throws \ReflectionException
+     */
+    public function parseIntoDoc($formClass): FormDocumentation
+    {
+        $docForm = new FormDocumentation;
+
+        $formFactory = $this->lib->getFormFactory();
+        $lib = $this->lib;
+
+        $formBuilder = $formFactory->create($formClass);
+        $elements = $formBuilder->all();
+
+        foreach ($elements as $name => $element) {
+
+            $docElement = new FormElementDocumentation();
+            $docForm->items[] = $docElement;
+
+            $config = $element->getConfig();
+            $elementInnerType = $element->getConfig()->getType()->getInnerType();
+            $elementInnerTypeClass = \get_class($elementInnerType);
+
+            /** @deprecated  */
+            $elementExtraAttributes = [];
+
+            $docElement->typeClass = $elementInnerTypeClass;
+
+            if ($config->hasAttribute(self::OPTIONS_FIELD_NAME)) {
+                $passedOptions = $config->getAttribute(self::OPTIONS_FIELD_NAME);
+                if ($passedOptions === null) {
+                    $passedOptions = [];
+                }
+            } else {
+                $passedOptions = $config->getOptions();
+            }
+
+            $docElement->description = $passedOptions['label'] ?? '';
+
+            if (isset($passedOptions['example'])) {
+                $docElement->example = htmlspecialchars($passedOptions['example']);
+            }
+
+            if (array_key_exists('default', $passedOptions)
+                && ($passedOptions['default'] !== FormFieldDefaultValueExtension::UNDEFINED)
+            ) {
+                $defaultValue = $passedOptions['default'];
+                $docElement->default = $defaultValue;
+
+                if (($elementInnerTypeClass === BooleanType::class) && \is_bool($defaultValue)) {
+                    $docElement->default = $defaultValue ? BooleanType::VALUE_TRUE : BooleanType::VALUE_FALSE;
+                }
+
+            }
+
+            // overriding default option with empty_data option value
+            // todo: empty_data is not very good option, avoiding using it
+
+            if ($elementInnerTypeClass === Type\ChoiceType::class) {
+                $docElement->enum = \array_values($passedOptions['choices'] ?? []);
+            }
+
+            $constraints = $passedOptions['constraints'] ?? [];
+            foreach($constraints as $constraint) {
+                // todo: if field has default value, ignore NotBlank and avoid to set field as required?
+                if ($constraint instanceof Constraints\NotBlank) {
+                    $docForm->requiredFields[] = $name;
+                    //$requiredFields[] = '"'.$name.'"';
+                    break;
+                }
+
+                if ($constraint instanceof Constraints\NotNull) {
+                    $docForm->requiredFields[] = $name;
+                    //$requiredFields[] = '"'.$name.'"';
+                    break;
+                }
+
+            }
+
+            $fieldIsNotNull = false;
+            foreach($constraints as $constraint) {
+                if ($constraint instanceof Constraints\NotNull) {
+                    $fieldIsNotNull = true;
+                    break;
+                }
+            }
+
+            if ($elementInnerTypeClass === BooleanType::class) {
+                if ($fieldIsNotNull) {
+                    //$elementExtraAttributes['enum'] = [0,1]; // [true,false]
+                    $docElement->enum = [0,1]; // [true,false]
+                } else {
+                    $docElement->enum = [0,1,null]; // [true,false,null]
+                    //$elementExtraAttributes['enum'] = [0,1,null]; // [true,false,null]
+                }
+
+            }
+
+            foreach ($constraints as $constraint) {
+
+                if ($constraint instanceof Constraints\NotBlank) {
+                    continue;
+                }
+
+                if ($constraint instanceof Constraints\Length) {
+                    if ($constraint->min !== null) {
+                        //$elementExtraAttributes['minLength'] = $constraint->min;
+                        $docElement->minLength = $constraint->min;
+                    }
+
+                    if ($constraint->max !== null) {
+                        //$elementExtraAttributes['maxLength'] = $constraint->max;
+                        $docElement->maxLength = $constraint->max;
+                    }
+
+                } elseif ($constraint instanceof Constraints\GreaterThan) {
+                    $docElement->exclusiveMinimum = true;
+                    $docElement->minimum = $constraint->value;
+                    //$elementExtraAttributes['exclusiveMinimum'] = true;
+                    //$elementExtraAttributes['minimum'] = $constraint->value;
+                } elseif ($constraint instanceof Constraints\GreaterThanOrEqual) {
+                    $docElement->minimum = $constraint->value;
+                    //$elementExtraAttributes['minimum'] = $constraint->value;
+                } elseif ($constraint instanceof Constraints\LessThan) {
+                    $docElement->exclusiveMaximum = true;
+                    $docElement->maximum = $constraint->value;
+                    //$elementExtraAttributes['exclusiveMaximum'] = true;
+                    //$elementExtraAttributes['maximum'] = $constraint->value;
+                } elseif ($constraint instanceof Constraints\LessThanOrEqual) {
+                    $docElement->maximum = $constraint->value;
+                    //$elementExtraAttributes['maximum'] = $constraint->value;
+                } elseif ($constraint instanceof Constraints\Choice) {
+                    //$elementExtraAttributes['enum'] = \array_values($constraint->choices);
+                    $docElement->enum = \array_values($constraint->choices);
+                }
+            }
+
+            // changing enum to min/max if enum is big
+            if (\is_array($docElement->enum) && \count($docElement->enum)) {
+                $enumCollection = new ArrayCollection($docElement->enum);
+                $first = $enumCollection->first();
+                $last = $enumCollection->last();
+                if (\is_int($first) && \is_int($last) && ($first < $last)) {
+                    $docElement->enum = null;
+                    $docElement->minimum = $first;
+                    $docElement->exclusiveMinimum = false;
+                    $docElement->maximum = $last;
+                    $docElement->exclusiveMaximum = false;
+                }
+            }
+
+            // this is exactly swagger rendering
+            //$elementExtraAttributesString = '';
+            //if ($elementExtraAttributes) {
+            //    foreach($elementExtraAttributes as $attribute => $value) {
+            //
+            //        if ($value instanceof \Closure) {
+            //            continue;
+            //        }
+            //
+            //        $preparedValue = $value;
+            //        if ($value === null) {
+            //            $preparedValue = 'null';
+            //        } elseif (\is_bool($value)) {
+            //            $preparedValue = $value ? 'true' : 'false';
+            //        } elseif (\is_array($value)) {
+            //            $jsonValue = \json_encode($value);
+            //            $preparedValue = '{'.trim($jsonValue,'[]').'}';
+            //        } elseif(\is_string($value)) {
+            //            $preparedValue = '"'.$value.'"';
+            //        }
+            //        $elementExtraAttributesString .= ', '.$attribute.'='.$preparedValue;
+            //
+            //    }
+            //}
+
+            if ($elementInnerType instanceof CollectionType) {
+
+                $docElement->isCollection = true;
+                $elementCollectionEntryType = $element->getConfig()->getOption('entry_type');
+                $docElement->collectionElementsType = $elementCollectionEntryType;
+
+                // this is rendering
+                //if ($elementCollectionEntryType) {
+                //
+                //    if ($nativeType = $lib->detectSwaggerTypeFromNativeType($elementCollectionEntryType)) {
+                //        $lines[] = ' *   @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
+                //    } else {
+                //        $entryTypedefRef = $lib->referenceToDefinition(new \ReflectionClass($elementCollectionEntryType));
+                //        $lines[] = ' *     @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
+                //        $lines[] = ' *       @SWG\Items(ref="'.$entryTypedefRef.'"),';
+                //        $lines[] = ' *     ),';
+                //    }
+                //
+                //}
+
+            } else {
+
+                $docElement->isCollection = false;
+
+                //if (\class_exists($innerTypeClass) && \is_subclass_of($innerTypeClass,BaseForm::class)) {
+                if (\class_exists($elementInnerTypeClass) && (
+                        \is_subclass_of($elementInnerTypeClass,AbstractForm::class) ||
+                        (\is_subclass_of($elementInnerTypeClass,AbstractBaseResponse::class) && Classes::isImplements($elementInnerTypeClass,SwagenResponseInterface::class))
+                    )
+                ) {
+                    $docElement->isForm = true;
+                    // to provide correct naming of wrapped data
+                    $innerTypeClassReflection = new \ReflectionClass($elementInnerTypeClass);
+                    if ($innerTypeClassReflection->isAnonymous()) {
+                        $docElement->swaggerReferencesToClass = $formClass;
+                    } else {
+                        $docElement->swaggerReferencesToClass = $elementInnerTypeClass;
+                    }
+
+                    $propertyReference = $lib->referenceToDefinition(new \ReflectionClass($docElement->swaggerReferencesToClass));
+                    $docElement->referenceToDefinition = $propertyReference;
+
+                    // workaround to document nested object (All the siblings of $ref are ignored according to the spec.)
+                    //$lines[] = ' *     @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
+                } else {
+
+                    $enum = $docElement->enum ?? null;
+                    if ($elementInnerType instanceof BooleanType) {
+                        $docElement->swaggerType = 'boolean';
+                    } else if ($elementInnerType instanceof Type\ChoiceType && \is_array($enum) && (
+                            Arrays::areIdenticalByValuesStrict($enum,[true,false,null]) ||
+                            Arrays::areIdenticalByValuesStrict($enum,[true,false])
+                        )
+                    ) {
+                        $docElement->swaggerType = 'boolean';
+                    } else {
+                        $docElement->swaggerType = $lib->typeClassToSwaggerType($elementInnerTypeClass);
+                    }
+
+                }
+            }
+
+        }
+
+        //if (\count($requiredFields)) {
+        //    $lines[] = ' *     required={'.implode(', ',$requiredFields).'}';
+        //}
+
+        //return $lines;
+        return $docForm;
+    }
+
+    /**
+     * @param $formClass
+     *
      * @return array
      * @throws \ReflectionException
      */
@@ -65,32 +315,21 @@ class SymfonyGenerateFormDocumentation
                 $passedOptions = $config->getOptions();
             }
 
-            //$entryType = $passedOptions['entry_type'] ?? null;
-
-            $elementExtraAttributes['description'] = '';
-            if (isset($passedOptions['label'])) {
-                $elementExtraAttributes['description'] = $passedOptions['label'];
-            }
+            $elementExtraAttributes['description'] = $passedOptions['label'] ?? '';
 
             if (isset($passedOptions['example'])) {
                 $elementExtraAttributes['description'] .= '<br/>Пример: '.htmlspecialchars($passedOptions['example']);
                 $elementExtraAttributes['example'] = htmlspecialchars($passedOptions['example']);
             }
 
-            // todo: NULL is correct default value, so we should check that if it NULL was set too,
-            //via special default-not-set value DEFAULT_VALUE_IS_NOT_SET
-
-            //if (array_key_exists('default', $passedOptions) && $passedOptions['default'] !== null) {
             if (array_key_exists('default', $passedOptions)
                 && ($passedOptions['default'] !== FormFieldDefaultValueExtension::UNDEFINED)
             ) {
                 $defaultValue = $passedOptions['default'];
                 $elementExtraAttributes['default'] = $defaultValue;
 
-                if ($innerTypeClass === BooleanType::class) {
-                    if (\is_bool($defaultValue)) {
-                        $elementExtraAttributes['default'] = $defaultValue ? BooleanType::VALUE_TRUE : BooleanType::VALUE_FALSE;
-                    }
+                if (($innerTypeClass === BooleanType::class) && \is_bool($defaultValue)) {
+                    $elementExtraAttributes['default'] = $defaultValue ? BooleanType::VALUE_TRUE : BooleanType::VALUE_FALSE;
                 }
 
             }
@@ -131,16 +370,14 @@ class SymfonyGenerateFormDocumentation
 
             if ($innerTypeClass === BooleanType::class) {
                 if ($fieldIsNotNull) {
-                    //$elementExtraAttributes['enum'] = [true,false];
-                    $elementExtraAttributes['enum'] = [0,1];
+                    $elementExtraAttributes['enum'] = [0,1]; // [true,false]
                 } else {
-                    //$elementExtraAttributes['enum'] = [true,false,null];
-                    $elementExtraAttributes['enum'] = [0,1,null];
+                    $elementExtraAttributes['enum'] = [0,1,null]; // [true,false,null]
                 }
 
             }
 
-            foreach($constraints as $constraint) {
+            foreach ($constraints as $constraint) {
 
                 if ($constraint instanceof Constraints\NotBlank) {
                     continue;
@@ -167,8 +404,6 @@ class SymfonyGenerateFormDocumentation
                     $elementExtraAttributes['maximum'] = $constraint->value;
                 } elseif ($constraint instanceof Constraints\Choice) {
                     $elementExtraAttributes['enum'] = \array_values($constraint->choices);
-                } else {
-                    $x=1; // debug
                 }
             }
 
@@ -213,7 +448,6 @@ class SymfonyGenerateFormDocumentation
 
                 $elementCollectionEntryType = $element->getConfig()->getOption('entry_type');
 
-                //if ($entryType) {
                 if ($elementCollectionEntryType) {
 
                     if ($nativeType = $lib->detectSwaggerTypeFromNativeType($elementCollectionEntryType)) {
@@ -227,14 +461,6 @@ class SymfonyGenerateFormDocumentation
 
                 }
 
-                //if ($nativeType = $lib->detectSwaggerTypeFromNativeType($entryType)) {
-                //    $lines[] = ' *   @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
-                //} else {
-                //    $entryTypedefRef = $lib->referenceToDefinition(new \ReflectionClass($entryType));
-                //    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
-                //    $lines[] = ' *       @SWG\Items(ref="'.$entryTypedefRef.'"),';
-                //    $lines[] = ' *     ),';
-                //}
             } else {
 
 
@@ -374,7 +600,7 @@ class SymfonyGenerateFormDocumentation
 
         $lines = $this->generateNamedParameter($this->lib->formTitle($reflection), $schemaContent);
         $definitionLines = $this->generateNamedDefinition($this->lib->formTitle($reflection), $schemaContent);
-        \array_push($lines,...$definitionLines);
+        \array_push($lines, ...$definitionLines);
 
         return $lines;
     }

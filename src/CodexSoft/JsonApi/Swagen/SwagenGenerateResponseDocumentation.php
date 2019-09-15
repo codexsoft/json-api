@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi\Swagen;
 
+use CodexSoft\Code\Helpers\Strings;
 use CodexSoft\JsonApi\Response\AbstractBaseResponse;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
 use CodexSoft\Code\Helpers\Classes;
@@ -56,24 +57,10 @@ class SwagenGenerateResponseDocumentation
             return null;
         }
 
-        if (!\is_subclass_of($responseClass, AbstractBaseResponse::class)) {
-            $logger->info("$responseClass response SKIPPING: class is not ancestor of BaseResponse");
-            return null;
-        }
-
-        /**
-         * skip generating definitions if class does not implement auto-generating interface
-         */
-        if (!Classes::isImplements($responseClass, SwagenResponseInterface::class)) {
-            $logger->info("$responseClass response SKIPPING: class does not implement SwagenResponseInterface");
-            return null;
-        }
-
-        $logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));
-
         try {
             $reflection = new \ReflectionClass($responseClass);
         } catch (\ReflectionException $e) {
+            $this->getLogger()->notice("$responseClass form SKIPPING: failed to instantiate ReflectionClass");
             return null;
         }
 
@@ -82,40 +69,50 @@ class SwagenGenerateResponseDocumentation
             return null;
         }
 
-        //$suggestedResponseTitle = (string) str($responseClassWithoutPrefix)->replace('\\','_')->trimLeft('_');
-        $suggestedResponseTitle = (string) str($responseClass)->replace('\\', '_')->trimLeft('_');
+        if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
+            $logger->info("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
+            return null;
+        }
+
+        /**
+         * skip generating definitions if class does not implement auto-generating interface
+         */
+        if (!$reflection->implementsInterface(SwagenResponseInterface::class)) {
+            $logger->info("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
+            return null;
+        }
+
+        $logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));
 
         /** @var SwagenResponseInterface $responseClass */
         $responseDescription = $responseClass::getSwaggerResponseDescription();
 
+        if ($reflection->getConstructor()->getNumberOfRequiredParameters() > 0) {
+            $logger->warning("$responseClass response skipping generate swagger response DEFINITION: it has required parameters in constructor!");
+        }
+
         if ($reflection->getConstructor()->getNumberOfRequiredParameters() === 0) {
 
-            if ($responseClass instanceof ResponseWrappedDataInterface) {
+            if ($reflection->implementsInterface(ResponseWrappedDataInterface::class)) {
+                /** @var ResponseWrappedDataInterface $responseClass */
                 $responseClass::setGeneratingWrappedDataForResponseDefinition(true);
             }
-
-            //if (Traits::isUsedBy($responseClass, ResponseWrappedDataTrait::class)) {
-            //    ResponseWrappedDataTrait::setGeneratingWrappedDataForResponseDefinition(true);
-                //BaseSuccessResponse::setGeneratingWrappedDataForResponseDefinition(true);
-            //}
 
             $responseDefinitionLines = (new SymfonyGenerateFormDocumentation($this->lib))->generateFormAsDefinition($responseClass);
             if ($responseDefinitionLines) {
                 \array_push($lines, ...$responseDefinitionLines);
             }
 
-            if ($responseClass instanceof ResponseWrappedDataInterface) {
+            if ($reflection->implementsInterface(ResponseWrappedDataInterface::class)) {
+                /** @var ResponseWrappedDataInterface $responseClass */
                 $responseClass::setGeneratingWrappedDataForResponseDefinition(false);
             }
-
-            //if (Traits::isUsedBy($responseClass, ResponseWrappedDataTrait::class)) {
-            //    ResponseWrappedDataTrait::setGeneratingWrappedDataForResponseDefinition(false);
-                //BaseSuccessResponse::setGeneratingWrappedDataForResponseDefinition(false);
-            //}
 
         } else {
             $logger->warning("$responseClass response skipping generate swagger response DEFINITION: it has required parameters in constructor!");
         }
+
+        $suggestedResponseTitle = (string) str($responseClass)->replace('\\', '_')->trimLeft('_');
 
         $lines[] = ' * @SWG\Response(';
         $lines[] = ' *   response="'.$suggestedResponseTitle.'",';
@@ -149,24 +146,22 @@ class SwagenGenerateResponseDocumentation
                 }
 
             } else {
-                $logger->warning("$responseClass skipping response SCHEMA documenting: has required parameters in constructor and is NOT implementing SwagenResponseExternalFormInterface!");
+                $logger->warning("$responseClass skipping response SCHEMA documenting: has required parameters in constructor and is NOT implementing ".SwagenResponseExternalFormInterface::class);
                 //throw new \LogicException($responseClass.' has required parameters in constructor!');
             }
 
-        } elseif (is_subclass_of($responseClass, DefaultErrorResponse::class)) {
+        } elseif ($reflection->isSubclassOf(DefaultErrorResponse::class)) {
             $lines[] = ' *   ref="$/responses/error_response",';
-        } elseif (is_subclass_of($responseClass, DefaultSuccessResponse::class)) {
+        } elseif ($reflection->isSubclassOf(DefaultSuccessResponse::class)) {
             $lines[] = ' *   ref="$/responses/success_response",';
         }
 
-        // add an example
-
-        // todo: can be auto-generated
+        // add an manual example
 
         $examplesDir = $this->examplesDir;
         if ($examplesDir) {
 
-            $suggestedResponseExampleFile = str($responseClass)->replace('\\', '/').'.json';
+            $suggestedResponseExampleFile = Strings::bs2s($responseClass).'.json';
             $suggestedResponseExamplePath = $examplesDir.$suggestedResponseExampleFile;
 
             if (file_exists($suggestedResponseExamplePath)) {
@@ -190,17 +185,6 @@ class SwagenGenerateResponseDocumentation
 
         return $lines;
 
-    }
-
-    /**
-     * @param SwagenLib $lib
-     *
-     * @return SwagenGenerateResponseDocumentation
-     */
-    public function setLib(SwagenLib $lib): SwagenGenerateResponseDocumentation
-    {
-        $this->lib = $lib;
-        return $this;
     }
 
     /**

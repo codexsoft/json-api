@@ -69,6 +69,9 @@ $commandList = [
         $operation->setNewActionName($options[0]);
         $operation->setRoute($options[1] ?? '');
     }),
+
+    'swagen' => new \CodexSoft\JsonApi\Command\SwagenCommand(),
+
     //'add-action' => (new ExecuteOperationCommand($jsonApi->generateAction()))
     //    ->setConfigureCallback(function(array $options, \CodexSoft\WebServer\Operations\CreateActionOperation $operation) {
     //        $operation->setNewActionName($options[0]);

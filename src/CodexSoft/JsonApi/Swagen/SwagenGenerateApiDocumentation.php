@@ -7,7 +7,6 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Routing\Route;
 
 /**
- * Class SwagenOperation
  * Swagger API documentation auto generator
  */
 class SwagenGenerateApiDocumentation
@@ -63,7 +62,8 @@ class SwagenGenerateApiDocumentation
                     ->generate($route);
 
                 if (\is_array($routeLines)) {
-                    $lines = \array_merge($lines, $routeLines);
+                    //$lines = \array_merge($lines, $routeLines);
+                    \array_push($lines, ...$routeLines);
                 }
             } catch (\Throwable $e) {
                 $this->getLogger()
@@ -144,7 +144,8 @@ class SwagenGenerateApiDocumentation
                     ->generate();
 
                 if (\is_array($responseLines)) {
-                    $lines = \array_merge($lines, $responseLines);
+                    //$lines = \array_merge($lines, $responseLines);
+                    \array_push($lines, ...$responseLines);
                 }
             } catch (\Throwable $e) {
                 $this->getLogger()
@@ -169,7 +170,6 @@ class SwagenGenerateApiDocumentation
      */
     protected function generateForms($formsDir, $formsNamespace): array
     {
-
         $lines = [];
 
         $formClasses = $this->lib->findClassesInPath($formsDir, $formsNamespace);
@@ -180,7 +180,8 @@ class SwagenGenerateApiDocumentation
                 $formLines = (new SwagenForm($this->lib))->generate($formClass);
 
                 if (\is_array($formLines)) {
-                    $lines = \array_merge($lines, $formLines);
+                    //$lines = \array_merge($lines, $formLines);
+                    \array_push($lines, ...$formLines);
                 }
 
             } catch (\ReflectionException $e) {
@@ -192,6 +193,7 @@ class SwagenGenerateApiDocumentation
             }
 
         }
+
         return $lines;
     }
 
@@ -224,21 +226,20 @@ class SwagenGenerateApiDocumentation
             '/**',
         ];
 
-        $lines = \array_merge($lines, $this->generateRoutes($this->pathPrefixToRemove));
+        \array_push($lines, ...$this->generateRoutes($this->pathPrefixToRemove));
 
         $formsClassMap = $this->formsClassesMap ?: $this->getDefaultFormsClassMap();
         foreach ($formsClassMap as $path => $namespace) {
-            $lines = \array_merge($lines, $this->generateForms($path, $namespace));
+            \array_push($lines, ...$this->generateForms($path, $namespace));
         }
 
         $responsesClassMap = $this->responsesClassesMap ?: $this->getDefaultResponsesClassMap();
         foreach ($responsesClassMap as $path => $namespace) {
-            $lines = \array_merge($lines, $this->generateResponses($this->pathPrefixToRemove, $path, $namespace, $this->rootDir.'/docs/response/'));
-            //$lines = \array_merge($lines,$this->generateResponses($this->pathPrefixToRemove,$path,$namespace,\dirname($this->rootDir).'/docs/response/'));
+            \array_push($lines, ...$this->generateResponses($this->pathPrefixToRemove, $path, $namespace, $this->rootDir.'/docs/response/'));
         }
 
         // todo: can be skipped?
-        //$lines = \array_merge($lines,$this->generateLegacyResponses());
+        //\array_push($lines, ...$this->generateLegacyResponses());
 
         $lines[] = ' */';
         $lines[] = 'class Definitions {}';
@@ -247,7 +248,6 @@ class SwagenGenerateApiDocumentation
 
         $destinationPathFromRoot = $this->destinationFile;
         $destinationFilePath = $this->rootDir.$destinationPathFromRoot;
-        //$destinationFilePath = \dirname($this->rootDir).$destinationPathFromRoot;
 
         $fs = new Filesystem;
         $fs->dumpFile($destinationFilePath, $code);

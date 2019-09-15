@@ -21,17 +21,12 @@ use function CodexSoft\Code\str;
 
 /**
  * Генерация документации к запросам (экшнам)
- *
- * Class SwagenAction
  */
 class SwagenGenerateActionDocumentation
 {
 
     /** @var SwagenLib */
     private $lib;
-
-    ///** @var Route */
-    //private $route;
 
     /** @var string */
     private $pathPrefixToRemove;
@@ -49,6 +44,8 @@ class SwagenGenerateActionDocumentation
     /**
      * Сгенерирует массив строк, описывающих экшн через SwaggerPHP аннотации. Предполагается, что
      * эти строки будут вставлены в Definitions.php в числе прочих API аннотаций.
+     *
+     * @param Route $route
      *
      * @return string[]
      * @throws \ReflectionException
@@ -84,8 +81,7 @@ class SwagenGenerateActionDocumentation
 
         /* skip generating definitions if class does not implement auto-generating interface */
         if (!$actionClass || !\class_exists($actionClass) || !Classes::implement($actionClass, SwagenInterface::class)) {
-            $this->getLogger()
-                ->debug($actionClass.' action SKIPPING because it does not implement SwagenInterface');
+            $this->getLogger()->debug($actionClass.' action SKIPPING because it does not implement SwagenInterface');
             return null;
         }
 
@@ -154,13 +150,22 @@ class SwagenGenerateActionDocumentation
 
         if ($pathVars) {
             foreach ($pathVars as $pathVar) {
-                $lines[] = ' *     @SWG\Parameter(';
-                $lines[] = ' *         type="integer",'; // assuming is integer
-                $lines[] = ' *         description="'.str($pathVar)->toTitleCase().'",';
-                $lines[] = ' *         in="path",';
-                $lines[] = ' *         name="'.$pathVar.'",';
-                $lines[] = ' *         required=true,'; // assuming is required
-                $lines[] = ' *     ),';
+                \array_push($lines, ...[
+                    ' *     @SWG\Parameter(',
+                    ' *         type="integer",', // assuming is integer
+                    ' *         description="'.str($pathVar)->toTitleCase().'",',
+                    ' *         in="path",',
+                    ' *         name="'.$pathVar.'",',
+                    ' *         required=true,', // assuming is required
+                    ' *     ),',
+                ]);
+                //$lines[] = ' *     @SWG\Parameter(';
+                //$lines[] = ' *         type="integer",'; // assuming is integer
+                //$lines[] = ' *         description="'.str($pathVar)->toTitleCase().'",';
+                //$lines[] = ' *         in="path",';
+                //$lines[] = ' *         name="'.$pathVar.'",';
+                //$lines[] = ' *         required=true,'; // assuming is required
+                //$lines[] = ' *     ),';
             }
         } else if (Classes::implement($actionClass, SwagenActionExternalFormInterface::class)) {
 
@@ -170,11 +175,9 @@ class SwagenGenerateActionDocumentation
                 $actionFormReflectionClass = new \ReflectionClass($actionFormClass);
                 $formTitleUnderscored = $lib->formTitle($actionFormReflectionClass);
                 $lines[] = ' *     @SWG\Parameter(ref="#/parameters/'.$formTitleUnderscored.'"),';
-                $this->getLogger()
-                    ->info('Action '.$actionClass.' uses custom form '.$actionFormClass);
+                $this->getLogger()->info('Action '.$actionClass.' uses custom form '.$actionFormClass);
             } catch (\ReflectionException $e) {
-                $this->getLogger()
-                    ->warning('Action '.$actionClass.' says that its form is '.$actionFormClass.' but there was exception: '.$e->getMessage());
+                $this->getLogger()->warning('Action '.$actionClass.' says that its form is '.$actionFormClass.' but there was exception: '.$e->getMessage());
             }
 
         } else {
@@ -192,11 +195,9 @@ class SwagenGenerateActionDocumentation
             if (\class_exists($actionFormClass) && \is_subclass_of($actionFormClass, AbstractForm::class)) {
                 $formTitleUnderscored = str($formNamespace.$actionClassWithoutPrefix)->replace('\\', '_').'Form';
                 $lines[] = ' *     @SWG\Parameter(ref="#/parameters/'.$formTitleUnderscored.'"),';
-                $this->getLogger()
-                    ->info('Action '.$actionClass.' uses name-based form '.$formTitleUnderscored);
+                $this->getLogger()->info('Action '.$actionClass.' uses name-based form '.$formTitleUnderscored);
             } else {
-                $this->getLogger()
-                    ->notice("$actionClass action: Unable to detect which form is used as input data by action! (checked fallback $actionFormClass)");
+                $this->getLogger()->notice("$actionClass action: Unable to detect which form is used as input data by action! (checked fallback $actionFormClass)");
             }
 
         }
