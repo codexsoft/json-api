@@ -15,7 +15,7 @@ class ResponseDocumentation
     public $description;
 
     /** @var string */
-    public $externalFormClass;
+    public $formClass;
 
     /** @var string */
     public $example;
