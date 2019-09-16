@@ -41,6 +41,69 @@ class SwagenGenerateActionDocumentation
         $this->lib = $lib;
     }
 
+    public function generateByActionDoc(ActionDocumentation $actionDocumentation): ?array
+    {
+        $methods = $actionDocumentation->route->getMethods();
+        $method = Request::METHOD_POST;
+
+        /* Допущение, что экшн заточен под один конкретный метод */
+        if (\count($methods)) {
+            $method = Arrays::tool()->getFirst($methods);
+        }
+
+        $requestTags = $actionDocumentation->tags;
+        \array_walk($requestTags, function (&$tag) {
+            $tag = '"'.$tag.'"';
+        });
+        $requestTagsString = \implode(',', $requestTags);
+
+        $lines = [
+            ' * @SWG\\'.str($method)->toTitleCase().'(',
+            ' *     path="'.$actionDocumentation->path.'",',
+            ' *     tags={'.$requestTagsString.'},',
+            ' *     summary="'.$actionDocumentation->path.'",',
+            ' *     description="'.$actionDocumentation->description.'",',
+        ];
+
+        $pathVars = $$actionDocumentation->compiledRoute->getPathVariables();
+
+        if ($pathVars) {
+            foreach ($pathVars as $pathVar) {
+                \array_push($lines, ...[
+                    ' *     @SWG\Parameter(',
+                    ' *         type="integer",', // assuming is integer
+                    ' *         description="'.str($pathVar)->toTitleCase().'",',
+                    ' *         in="path",',
+                    ' *         name="'.$pathVar.'",',
+                    ' *         required=true,', // assuming is required
+                    ' *     ),',
+                ]);
+            }
+        } else {
+            $formTitleUnderscored = $this->lib->formTitle(new \ReflectionClass($actionDocumentation->inputFormClass));
+            $lines[] = ' *     @SWG\Parameter(ref="#/parameters/'.$formTitleUnderscored.'"),';
+        }
+
+        foreach ($actionDocumentation->responses as $responseHttpCode => $responseClass) {
+            $suggestedResponseTitle = ResponseDocumentation::generateTitleStatic($responseClass);
+            $lines[] = ' *     @SWG\Response(response="'.$responseHttpCode.'", ref="#/responses/'.$suggestedResponseTitle.'"),';
+        }
+
+        //$parser = new SymfonyGenerateFormDocumentation($this->lib);
+        //$responseSchemaContent = $parser->parseIntoSchema($errorCodesClass);
+
+        //$lines[] = ' *       @SWG\Response(response="'.$httpErrorCode.'", description="'.$errorCodeDescription.' ('.$errorCode.')",';
+        //$lines[] = ' *       @SWG\Schema(';
+        //\array_push($lines, ...$responseSchemaLinesWithSpecifiedErrorCode);
+        //$lines[] = ' *       )';
+        //$lines[] = ' *     ),';
+
+        $lines[] = ' * )';
+        $lines[] = ' *';
+
+        return $lines;
+    }
+
     /**
      * Сгенерирует массив строк, описывающих экшн через SwaggerPHP аннотации. Предполагается, что
      * эти строки будут вставлены в Definitions.php в числе прочих API аннотаций.

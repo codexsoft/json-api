@@ -43,6 +43,54 @@ class SwagenGenerateResponseDocumentation
         return $this->lib->getLogger();
     }
 
+    public function generateByResponseDoc(ResponseDocumentation $responseDocumentation): ?array
+    {
+        $lines = [];
+        $logger = $this->getLogger();
+
+        // generating response as definition
+        $responseDefinitionLines = (new SymfonyGenerateFormDocumentation($this->lib))->generateFormAsDefinition($responseDocumentation->class);
+        if ($responseDefinitionLines) {
+            \array_push($lines, ...$responseDefinitionLines);
+        }
+
+        // generating response
+        \array_push($lines, ...[
+            ' * @SWG\Response(',
+            ' *   response="'.ResponseDocumentation::generateTitleStatic($responseDocumentation->class).'",',
+            ' *   description="'.$responseDocumentation->description.'"',
+        ]);
+
+        $responseFormLines = (new SymfonyGenerateFormDocumentation($this->lib))
+            ->parseIntoSchema($responseDocumentation->formClass);
+
+        if ($responseFormLines) {
+            $lines[] = ' *   ,@SWG\Schema(';
+            \array_push($lines, ...$responseFormLines);
+            $lines[] = ' *   )';
+        } else {
+            $logger->warning($responseDocumentation->formClass.' has no schema!');
+        }
+
+        if ($responseDocumentation->example) {
+            $lines[] = ' *   ,examples = {';
+            $lines[] = ' *     "application/json":';
+            $exampleContent = $responseDocumentation->example;
+            $filteredExampleContent = (string) str($exampleContent)->replace('[', '{')->replace(']', '}');
+            $exampleLines = explode("\n", $filteredExampleContent);
+
+            foreach ($exampleLines as $exampleLine) {
+                $lines[] = ' *     '.$exampleLine;
+            }
+            $lines[] = ' *   }';
+        }
+
+        $lines[] = ' * )';
+        $lines[] = ' *';
+
+        return $lines;
+    }
+
     public function generate(): ?array
     {
 

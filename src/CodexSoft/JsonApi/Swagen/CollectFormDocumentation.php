@@ -38,7 +38,7 @@ class CollectFormDocumentation extends AbstractCollector
         foreach ($elements as $name => $element) {
 
             $docElement = new FormElementDocumentation();
-            $docForm->items[] = $docElement;
+            $docForm->items[$name] = $docElement;
 
             $config = $element->getConfig();
             $elementInnerType = $element->getConfig()->getType()->getInnerType();

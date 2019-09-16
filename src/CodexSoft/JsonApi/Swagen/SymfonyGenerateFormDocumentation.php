@@ -11,7 +11,6 @@ use CodexSoft\JsonApi\Response\AbstractBaseResponse;
 use CodexSoft\JsonApi\Swagen\Interfaces\SwagenResponseInterface;
 use CodexSoft\Code\Helpers\Arrays;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
 
@@ -26,6 +25,100 @@ class SymfonyGenerateFormDocumentation
     public function __construct(SwagenLib $lib)
     {
         $this->lib = $lib;
+    }
+
+    /**
+     * @param FormDocumentation $formDocumentation
+     *
+     * @return string[]
+     * @throws \ReflectionException
+     */
+    public function parseIntoSchemaByFormDoc(FormDocumentation $formDocumentation): array
+    {
+        $lines = [];
+
+        //$formFactory = $this->lib->getFormFactory();
+        $lib = $this->lib;
+
+        foreach ($formDocumentation->items as $name => $item) {
+
+            $elementExtraAttributesString = '';
+
+            // todo: not all attributes must be rendered!
+            $elementExtraAttributes = [
+                'example' => $item->example,
+                'minLength' => $item->minLength,
+                'maxLength' => $item->maxLength,
+                'exclusiveMinimum' => $item->exclusiveMinimum,
+                'minimum' => $item->minimum,
+                'exclusiveMaximum' => $item->exclusiveMaximum,
+                'maximum' => $item->maximum,
+                'enum' => $item->enum,
+                'label' => $item->label,
+                'description' => $item->description,
+                'default' => $item->default,
+            ];
+
+            if ($elementExtraAttributes) {
+                foreach($elementExtraAttributes as $attribute => $value) {
+
+                    if ($value instanceof \Closure) {
+                        continue;
+                    }
+
+                    $preparedValue = $value;
+                    if ($value === null) {
+                        $preparedValue = 'null';
+                    } elseif (\is_bool($value)) {
+                        $preparedValue = $value ? 'true' : 'false';
+                    } elseif (\is_array($value)) {
+                        $jsonValue = \json_encode($value);
+                        $preparedValue = '{'.trim($jsonValue,'[]').'}';
+                    } elseif(\is_string($value)) {
+                        $preparedValue = '"'.$value.'"';
+                    }
+                    $elementExtraAttributesString .= ', '.$attribute.'='.$preparedValue;
+
+                }
+            }
+
+            if ($item->isCollection()) {
+                if ($item->collectionElementsType) {
+                    if ($nativeType = $lib->detectSwaggerTypeFromNativeType($item->collectionElementsType)) {
+                        $lines[] = ' *   @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
+                    } else {
+                        $entryTypedefRef = $lib->referenceToDefinition(new \ReflectionClass($item->collectionElementsType));
+                        $lines[] = ' *     @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
+                        $lines[] = ' *       @SWG\Items(ref="'.$entryTypedefRef.'"),';
+                        $lines[] = ' *     ),';
+                    }
+                }
+            } elseif($item->isForm()) {
+                $propertyReference = $lib->referenceToDefinition(new \ReflectionClass($item->swaggerReferencesToClass));
+                $lines[] = ' *     @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
+            } else {
+
+                $enum = $elementExtraAttributes['enum'] ?? null;
+                if (\is_subclass_of($item->fieldTypeClass, BooleanType::class)) {
+                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
+                } else if (\is_array($enum) && \is_subclass_of($item->fieldTypeClass, Type\ChoiceType::class) && (
+                        Arrays::areIdenticalByValuesStrict($enum,[true,false,null]) ||
+                        Arrays::areIdenticalByValuesStrict($enum,[true,false])
+                    )
+                ) {
+                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
+                } else {
+                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="'.$lib->typeClassToSwaggerType($item->fieldTypeClass).'"'.$elementExtraAttributesString.'),';
+                }
+            }
+
+        }
+
+        if (\count($formDocumentation->requiredFields)) {
+            $lines[] = ' *     required={'.implode(', ',$formDocumentation->requiredFields).'}';
+        }
+
+        return $lines;
     }
 
     /**
