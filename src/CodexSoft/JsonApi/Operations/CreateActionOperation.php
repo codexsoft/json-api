@@ -203,7 +203,7 @@ class CreateActionOperation extends Operation
     {
         $baseFormClass = AbstractForm::class;
         $fieldClass = Field::class;
-        $swagenInterface = \CodexSoft\JsonApi\Swagen\Interfaces\SwagenInterface::class;
+        $swagenInterface = \CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenInterface::class;
         $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
 
         $code = [

@@ -4,9 +4,9 @@ namespace CodexSoft\JsonApi;
 
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
-use CodexSoft\JsonApi\Swagen\Interfaces\SwagenActionDescriptionInterface;
-use CodexSoft\JsonApi\Swagen\Interfaces\SwagenActionTagsInterface;
-use CodexSoft\JsonApi\Swagen\Interfaces\SwagenActionInterface;
+use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionDescriptionInterface;
+use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionTagsInterface;
+use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionInterface;
 
 /**
  * Роуты, которые будут автоматически документироваться при помощи swagen-а

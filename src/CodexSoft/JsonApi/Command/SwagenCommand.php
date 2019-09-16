@@ -3,8 +3,8 @@
 namespace CodexSoft\JsonApi\Command;
 
 use CodexSoft\Code\Shortcuts;
-use CodexSoft\JsonApi\Swagen\SwagenGenerateApiDocumentation;
-use CodexSoft\JsonApi\Swagen\SwagenLib;
+use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenGenerateApiDocumentation;
+use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenLib;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
