@@ -84,6 +84,20 @@ class SwagenGenerateApiDocumentation
      */
     protected function generateLegacyResponses(): array
     {
+        $info = [
+            ' * @SWG\Swagger(',
+            ' *     schemes={"https"},',
+            ' *     host="test.codexsoft.ru",',
+            ' *     consumes={"application/json"},',
+            ' *     produces={"application/json"},',
+            ' *     @SWG\Info(',
+            ' *         version="1.0.0",',
+            ' *         title="Test Application API",',
+            ' *         description="Замечание 1. Булевы значения принимаются и возвращаются в виде INT {0|1}, для некоторых полей допустим набор {0|1|null}",',
+            ' *     )',
+            ' * )',
+        ];
+
         return [
             ' * @SWG\Response(',
             ' *   response="success_response",',

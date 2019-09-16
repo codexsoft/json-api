@@ -25,7 +25,6 @@ class CollectResponseDocumentation extends AbstractCollector
         $docResponse = new ResponseDocumentation;
         $docResponse->class = $responseClass;
 
-        $lib = $this->lib;
         $logger = $this->getLogger();
 
         if (!\class_exists($responseClass)) {
@@ -62,10 +61,6 @@ class CollectResponseDocumentation extends AbstractCollector
         /** @var SwagenResponseInterface $responseClass */
         $docResponse->description = $responseClass::getSwaggerResponseDescription();
 
-        //if ($reflection->getConstructor()->getNumberOfRequiredParameters() > 0) {
-        //    $logger->warning("$responseClass response skipping generate swagger response DEFINITION: it has required parameters in constructor!");
-        //}
-
         if ($reflection->getConstructor()->getNumberOfRequiredParameters() === 0) {
 
             if ($reflection->implementsInterface(ResponseWrappedDataInterface::class)) {
@@ -94,80 +89,12 @@ class CollectResponseDocumentation extends AbstractCollector
             $docResponse->formClass = $responseClass;
         }
 
-        //$suggestedResponseTitle = (string) str($responseClass)->replace('\\', '_')->trimLeft('_');
-        //
-        //$lines[] = ' * @SWG\Response(';
-        //$lines[] = ' *   response="'.$suggestedResponseTitle.'",';
-        //$lines[] = ' *   description="'.$responseDescription.'"';
-        //
-        //if ($reflection->implementsInterface(SwagenResponseExternalFormInterface::class)) {
-        //    /** @var SwagenResponseExternalFormInterface $responseClass */
-        //    $responseFormClass = $responseClass::getFormClass();
-        //
-        //    $responseFormLines = (new SymfonyGenerateFormDocumentation($lib))->parseIntoSchema($responseFormClass);
-        //
-        //    if ($responseFormLines) {
-        //        $lines[] = ' *   ,@SWG\Schema(';
-        //        \array_push($lines, ...$responseFormLines);
-        //        $lines[] = ' *   )';
-        //    } else {
-        //        $logger->warning($responseClass.' has no schema!');
-        //    }
-        //
-        //} elseif ($reflection->implementsInterface(FormTypeInterface::class)) {
-        //
-        //    if ($reflection->getConstructor()->getNumberOfRequiredParameters() === 0) {
-        //        $responseFormLines = (new SymfonyGenerateFormDocumentation($lib))->parseIntoSchema($responseClass);
-        //
-        //        if ($responseFormLines) {
-        //            $lines[] = ' *   ,@SWG\Schema(';
-        //            \array_push($lines, ...$responseFormLines);
-        //            $lines[] = ' *   )';
-        //        } else {
-        //            $logger->warning($responseClass.' has no schema!');
-        //        }
-        //
-        //    } else {
-        //        $logger->warning("$responseClass skipping response SCHEMA documenting: has required parameters in constructor and is NOT implementing ".SwagenResponseExternalFormInterface::class);
-        //    }
-        //
-        //} elseif ($reflection->isSubclassOf(DefaultErrorResponse::class)) {
-        //    $lines[] = ' *   ref="$/responses/error_response",';
-        //} elseif ($reflection->isSubclassOf(DefaultSuccessResponse::class)) {
-        //    $lines[] = ' *   ref="$/responses/success_response",';
-        //}
-
         // add an manual example
 
         $exampleFileName = str($reflection->getFileName())->removeRight('.php')->append('.json');
         if (\file_exists($exampleFileName)) {
             $docResponse->example = \file_get_contents($exampleFileName);
         }
-
-        //$examplesDir = $this->examplesDir;
-        //if ($examplesDir) {
-        //
-        //    $suggestedResponseExampleFile = Strings::bs2s($responseClass).'.json';
-        //    $suggestedResponseExamplePath = $examplesDir.$suggestedResponseExampleFile;
-        //
-        //    if (file_exists($suggestedResponseExamplePath)) {
-        //        $logger->info('- example found in '.$suggestedResponseExamplePath);
-        //        $lines[] = ' *   ,examples = {';
-        //        $lines[] = ' *     "application/json":';
-        //        $exampleContent = file_get_contents($suggestedResponseExamplePath);
-        //        $filteredExampleContent = (string) str($exampleContent)->replace('[', '{')->replace(']', '}');
-        //        $exampleLines = explode("\n", $filteredExampleContent);
-        //
-        //        foreach ($exampleLines as $exampleLine) {
-        //            $lines[] = ' *     '.$exampleLine;
-        //        }
-        //        $lines[] = ' *   }';
-        //    }
-        //
-        //}
-        //
-        //$lines[] = ' * )';
-        //$lines[] = ' *';
 
         return $docResponse;
     }

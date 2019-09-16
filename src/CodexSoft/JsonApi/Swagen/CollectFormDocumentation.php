@@ -28,6 +28,7 @@ class CollectFormDocumentation extends AbstractCollector
     public function collect(string $formClass): FormDocumentation
     {
         $docForm = new FormDocumentation;
+        $docForm->class = $formClass;
 
         $formFactory = $this->lib->getFormFactory();
 
