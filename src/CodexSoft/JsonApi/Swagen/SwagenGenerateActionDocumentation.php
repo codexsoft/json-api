@@ -143,6 +143,7 @@ class SwagenGenerateActionDocumentation
          *
          * if any path vars, assuming that is GET request
          * Скрестить описание GET-параметров и ссылку на структуру POST-JSON-а пока не удалось
+         * todo: возможно ли совмещение path-переменных и формы в swagger-openAPI?
          */
 
         $compiledRoute = $route->compile();
@@ -159,13 +160,6 @@ class SwagenGenerateActionDocumentation
                     ' *         required=true,', // assuming is required
                     ' *     ),',
                 ]);
-                //$lines[] = ' *     @SWG\Parameter(';
-                //$lines[] = ' *         type="integer",'; // assuming is integer
-                //$lines[] = ' *         description="'.str($pathVar)->toTitleCase().'",';
-                //$lines[] = ' *         in="path",';
-                //$lines[] = ' *         name="'.$pathVar.'",';
-                //$lines[] = ' *         required=true,'; // assuming is required
-                //$lines[] = ' *     ),';
             }
         } else if (Classes::implement($actionClass, SwagenActionExternalFormInterface::class)) {
 
@@ -188,7 +182,6 @@ class SwagenGenerateActionDocumentation
              *
              * Предполагаем, что для валидации входных данных используется форма
              * @SWG\Parameter(ref="#/parameters/TransportRequest_PublishForm"),
-             * todo: возможно ли совмещение path-переменных и формы в swagger-openAPI?
              */
             $formNamespace = $lib->getFormsDefaultNamespace();
             $actionFormClass = $formNamespace.$actionClassWithoutPrefix.'Form';

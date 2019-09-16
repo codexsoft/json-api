@@ -88,6 +88,7 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
 
         return [
             200 => $responseClass,
+            400 => DefaultErrorResponse::class,
         ];
     }
 

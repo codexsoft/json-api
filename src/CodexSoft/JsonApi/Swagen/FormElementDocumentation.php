@@ -53,11 +53,11 @@ class FormElementDocumentation
     //$propertyReference = $lib->referenceToDefinition(new \ReflectionClass($docElement->swaggerReferencesToClass));
     //$lines[] = ' *     @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
 
-    /** @var string */
-    public $swaggerType;
+    ///** @var string */
+    //public $swaggerType;
 
-    /** @var string */
-    public $referenceToDefinition; // $propertyReference
+    ///** @var string */
+    //public $referenceToDefinition; // $propertyReference
 
 
     public function isCollection(): bool
