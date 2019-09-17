@@ -101,6 +101,7 @@ class JsonApiSchema extends AbstractModuleSchema
     }
 
     /**
+     * Default to \CodexSoft\JsonApi\Form\Field::class
      * @param string $fieldHelperClass
      *
      * @return JsonApiSchema

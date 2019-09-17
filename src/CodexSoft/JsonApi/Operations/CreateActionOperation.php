@@ -3,7 +3,6 @@ namespace CodexSoft\JsonApi\Operations;
 
 use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\Code\Helpers\Strings;
-use CodexSoft\Code\Shortcuts;
 use CodexSoft\JsonApi\DocumentedFormAction;
 use CodexSoft\JsonApi\Form\AbstractForm;
 use CodexSoft\JsonApi\Form\Field;
@@ -78,8 +77,6 @@ class CreateActionOperation extends Operation
      */
     protected function handle(): void
     {
-        Shortcuts::register();
-
         $this->fs = new Filesystem();
         $this->getLogger()->debug('Actions path: '.$this->jsonApiSchema->getPathToActions());
 
@@ -102,9 +99,6 @@ class CreateActionOperation extends Operation
             $this->fqnActionClass = $baseActionsNamespace.$actionClass;
         }
 
-        //$this->shortActionClass = Classes::short($this->fqnActionClass);
-        //$this->shortActionResponseClass = $this->shortActionClass.'Response';
-        //$this->shortActionFormClass = $this->shortActionClass.'Form';
         $this->fqnActionFormClass = $this->fqnActionClass.'Form';
         $this->fqnActionResponseClass = $this->fqnActionClass.'Response';
         $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);

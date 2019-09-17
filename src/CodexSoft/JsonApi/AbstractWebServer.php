@@ -2,7 +2,6 @@
 
 namespace CodexSoft\JsonApi;
 
-use CodexSoft\Code\Shortcuts;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -22,7 +21,7 @@ class AbstractWebServer extends BaseKernel
     public function boot()
     {
         AnnotationReader::addGlobalIgnoredNamespace('SWG');
-        Shortcuts::register();
+        //Shortcuts::register();
         return parent::boot();
     }
 

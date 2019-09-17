@@ -16,7 +16,6 @@ class ApiDocCollectorTest extends TestCase
 
     public function testCollect()
     {
-        //$kernelClass = new class extends AbstractWebServer {};
         $kernel = new AbstractWebServer('dev', false);
         $kernel->boot();
 

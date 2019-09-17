@@ -2,7 +2,6 @@
 
 namespace CodexSoft\JsonApi\Command;
 
-use CodexSoft\Code\Shortcuts;
 use CodexSoft\JsonApi\JsonApiTools;
 use CodexSoft\JsonApi\Operations\CreateActionOperation;
 use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenGenerateApiDocumentation;
@@ -48,7 +47,6 @@ class CreateActionCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        Shortcuts::register();
         $output->writeln('Generating action...');
 
         $this->jsonApiTools->generateAction()->setNewActionName($input->getArgument('actionName'))->execute();

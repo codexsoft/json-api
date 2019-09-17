@@ -2,7 +2,6 @@
 
 namespace CodexSoft\JsonApi\Command;
 
-use CodexSoft\Code\Shortcuts;
 use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenGenerateApiDocumentation;
 use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenLib;
 use Symfony\Component\Console\Command\Command;
@@ -43,7 +42,6 @@ class SwagenStandaloneCommand extends Command
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        Shortcuts::register();
         $output->writeln('Generating swagger documentation...');
 
         $strictMode = $input->getOption('strict') ?: false;
