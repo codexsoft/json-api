@@ -53,7 +53,17 @@ function getDefaultConfigFilepath(): string
 $jsonApiConfigFile = unshiftFirstArgumentIfCorrectFilepath() ?: getDefaultConfigFilepath();
 $jsonApiSchema = \CodexSoft\JsonApi\JsonApiSchema::getFromConfigFile($jsonApiConfigFile);
 
-$console = new \Symfony\Component\Console\Application("CodexSoft JSON API tools CLI\nConfig file: $jsonApiConfigFile");
+//$console = new \Symfony\Component\Console\Application("CodexSoft JSON API tools CLI\nConfig file: $jsonApiConfigFile");
+$console = new \Symfony\Component\Console\Application(implode("\n", [
+    'CodexSoft JSON API tools CLI',
+    "Config file: $jsonApiConfigFile",
+    'NamespaceActions: '.$jsonApiSchema->getNamespaceActions(),
+    'PathToActions: '.$jsonApiSchema->getPathToActions(),
+    'PathToPsrRoot: '.$jsonApiSchema->getPathToPsrRoot(),
+    'NamespaceBase: '.$jsonApiSchema->getNamespaceBase(),
+    'NamespaceForms: '.$jsonApiSchema->getNamespaceForms(),
+    'PathToForms: '.$jsonApiSchema->getPathToForms(),
+]));
 
 $jsonApi = new \CodexSoft\JsonApi\JsonApiTools;
 $jsonApi->setConfig($jsonApiSchema);
