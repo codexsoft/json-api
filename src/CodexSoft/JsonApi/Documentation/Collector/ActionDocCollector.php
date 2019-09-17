@@ -23,7 +23,12 @@ class ActionDocCollector
     /** @var string */
     private $pathPrefixToRemove;
 
-    public function collect(Route $route): ?ActionDoc
+    public function __construct(LoggerInterface $logger = null)
+    {
+        $this->logger = $logger;
+    }
+
+    public function collect(Route $route): ActionDoc
     {
         $docAction = new ActionDoc;
 
@@ -56,13 +61,15 @@ class ActionDocCollector
         try {
             $actionClassReflection = new \ReflectionClass($actionClass);
         } catch (\ReflectionException $e) {
-            $logger->warning('Failed to create ReflectionClass for '.$actionClass.': '.$e);
-            return null;
+            throw new \Exception("SKIPPING action $actionClass: Failed to create ReflectionClass ".$e);
+            //$logger->warning('Failed to create ReflectionClass for '.$actionClass.': '.$e);
+            //return null;
         }
 
         if ($actionClassReflection->isAbstract()) {
-            $logger->notice("$actionClassReflection action SKIPPING: class is abstract");
-            return null;
+            throw new \Exception("SKIPPING action $actionClassReflection: class is abstract");
+            //$logger->notice("SKIPPING action $actionClassReflection: class is abstract");
+            //return null;
         }
 
         if ($actionClassReflection->implementsInterface(SwagenActionDescriptionInterface::class)) {
@@ -71,15 +78,17 @@ class ActionDocCollector
         }
 
         if (!$actionClassReflection->implementsInterface(SwagenInterface::class)) {
-            $logger->debug($actionClass.' action SKIPPING because it does not implement '.Classes::short(SwagenInterface::class));
-            return null;
+            throw new \Exception("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
+            //$logger->debug("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
+            //return null;
         }
 
         $logger->debug($actionClass.' action implements '.Classes::short(SwagenInterface::class));
 
         if (!$actionClassReflection->implementsInterface(SwagenActionInterface::class)) {
-            $logger->warning($actionClass.' does not implement '.SwagenActionInterface::class);
-            return null;
+            throw new \Exception("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
+            //$logger->warning("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
+            //return null;
         }
 
         $logger->debug($actionClass.' action implements '.Classes::short(SwagenActionInterface::class));
@@ -109,8 +118,9 @@ class ActionDocCollector
             /* @var SwagenActionExternalFormInterface $actionClass */
             $actionFormClass = $actionClass::getFormClass();
             if (!\class_exists($actionFormClass)) {
-                $logger->warning('Action '.$actionClass.' says that its form is '.$actionFormClass.' but this class is not exists');
-                return null;
+                throw new \Exception("SKIPPED action $actionClass says that its form is $actionFormClass but this class is not exists");
+                //$logger->warning('Action '.$actionClass.' says that its form is '.$actionFormClass.' but this class is not exists');
+                //return null;
             }
 
             $docAction->inputFormClass = $actionFormClass;
@@ -122,13 +132,15 @@ class ActionDocCollector
         foreach ($responseClasses as $responseHttpStatusCode => $responseClass) {
 
             if (!\is_int($responseHttpStatusCode) || $responseHttpStatusCode < 100) {
-                $logger->warning("Bad http code $responseHttpStatusCode for response $responseClass in action $actionClass");
-                return null;
+                $logger->warning("PROBLEM action $actionClass: Bad http code $responseHttpStatusCode in response $responseClass");
+                //return null;
             }
 
             if (!\class_exists($responseClass)) {
                 $logger->warning("Response $responseClass is not exists, in action $actionClass");
-                return null;
+                $logger->warning("PROBLEM action $actionClass: Response $responseClass is not exists");
+                continue;
+                //return null;
             }
 
             $docAction->responses[$responseHttpStatusCode] = $responseClass;

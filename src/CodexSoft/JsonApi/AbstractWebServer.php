@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi;
 
+use CodexSoft\Code\Shortcuts;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
@@ -21,6 +22,7 @@ class AbstractWebServer extends BaseKernel
     public function boot()
     {
         AnnotationReader::addGlobalIgnoredNamespace('SWG');
+        Shortcuts::register();
         return parent::boot();
     }
 
@@ -84,6 +86,7 @@ class AbstractWebServer extends BaseKernel
     {
         //$routes->import($this->getProjectDir().'/src/App/Action/', '/', 'annotation');
         $routes->import($this->getProjectDir().'/src/', '/', 'annotation');
+        $routes->import($this->getProjectDir().'/tests/unit/', '/', 'annotation');
 
         //$routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         //$routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');

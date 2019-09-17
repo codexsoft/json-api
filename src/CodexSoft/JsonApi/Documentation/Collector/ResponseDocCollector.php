@@ -5,6 +5,7 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseExternalFormInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormTypeInterface;
 use CodexSoft\Code\Helpers\Classes;
@@ -20,8 +21,9 @@ class ResponseDocCollector
     /** @var FormFactory */
     private $formFactory;
 
-    public function __construct(FormFactory $formFactory)
+    public function __construct(FormFactory $formFactory, LoggerInterface $logger = null)
     {
+        $this->logger = $logger;
         $this->formFactory = $formFactory;
     }
 
@@ -39,24 +41,26 @@ class ResponseDocCollector
         $logger = $this->getLogger();
 
         if (!\class_exists($responseClass)) {
-            return null;
+            //return null;
+            throw new \Exception("SKIPPING response $responseClass: class is not exists");
         }
 
         try {
             $reflection = new \ReflectionClass($responseClass);
         } catch (\ReflectionException $e) {
-            $this->getLogger()->notice("$responseClass form SKIPPING: failed to instantiate ReflectionClass");
-            return null;
+            throw new \Exception("SKIPPING response $responseClass: failed to instantiate ReflectionClass");
+            //$this->getLogger()->notice("SKIPPING response $responseClass: failed to instantiate ReflectionClass");
+            //return null;
         }
 
         if ($reflection->isAbstract()) {
-            throw new \Exception("$responseClass response SKIPPING: class is abstract");
+            throw new \Exception("SKIPPING response $responseClass: class is abstract");
             //$logger->notice("$responseClass response SKIPPING: class is abstract");
             //return null;
         }
 
         if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
-            throw new \Exception("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
+            throw new \Exception("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
             //$logger->info("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
             //return null;
         }
@@ -65,7 +69,7 @@ class ResponseDocCollector
          * skip generating definitions if class does not implement auto-generating interface
          */
         if (!$reflection->implementsInterface(SwagenResponseInterface::class)) {
-            throw new \Exception("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
+            throw new \Exception("SKIPPING response $responseClass : class does not implement ".SwagenResponseInterface::class);
             //$logger->info("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
             //return null;
         }
@@ -104,7 +108,7 @@ class ResponseDocCollector
             }
 
         } else {
-            $logger->warning("$responseClass response skipping generate swagger response DEFINITION: it has required parameters in constructor!");
+            $logger->warning("PROBLEM response $responseClass generate swagger response DEFINITION: it has required parameters in constructor!");
         }
 
         // add an manual example

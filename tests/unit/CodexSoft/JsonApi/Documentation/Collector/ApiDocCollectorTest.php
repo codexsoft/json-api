@@ -4,7 +4,11 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 
 
 use CodexSoft\JsonApi\AbstractWebServer;
+use CodexSoft\JsonApi\JsonApiSchema;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Routing\Router;
 
@@ -27,7 +31,7 @@ class ApiDocCollectorTest extends TestCase
 
         //$router = '';
         //$formFactory = '';
-        $jsonApiSchema = (new \CodexSoft\JsonApi\JsonApiSchema)
+        $jsonApiSchema = (new JsonApiSchema)
             ->setNamespaceBase('TestApi')
             ->setPathToPsrRoot($kernel->getProjectDir().'/tests/unit');
 
@@ -35,7 +39,9 @@ class ApiDocCollectorTest extends TestCase
             $kernel->getProjectDir().'/src' => '',
         ];
 
-        $apiDoc = (new ApiDocCollector($router, $formFactory, $jsonApiSchema))->collect($paths);
+        $logger = new Logger('main', [new StreamHandler('php://stderr')]);
+
+        $apiDoc = (new ApiDocCollector($router, $formFactory, $jsonApiSchema, $logger))->collect($paths);
         $x=1;
     }
 }

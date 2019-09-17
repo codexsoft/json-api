@@ -5,6 +5,7 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 use CodexSoft\Code\Helpers\Files;
 use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\JsonApiSchema;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Routing\Router;
 
@@ -22,8 +23,9 @@ class ApiDocCollector
     /** @var FormFactory */
     private $formFactory;
 
-    public function __construct(Router $router, FormFactory $formFactory, JsonApiSchema $jsonApiSchema)
+    public function __construct(Router $router, FormFactory $formFactory, JsonApiSchema $jsonApiSchema, LoggerInterface $logger = null)
     {
+        $this->logger = $logger;
         $this->router = $router;
         $this->jsonApiSchema = $jsonApiSchema;
         $this->formFactory = $formFactory;
@@ -77,7 +79,7 @@ class ApiDocCollector
         foreach ($responseClasses as $responseClass) {
 
             try {
-                $responseDoc = (new ResponseDocCollector($this->formFactory))->collect($responseClass);
+                $responseDoc = (new ResponseDocCollector($this->formFactory, $this->logger))->collect($responseClass);
             } catch (\Throwable $e) {
                 $this->logger->notice((string) $e);
                 continue;
@@ -102,7 +104,7 @@ class ApiDocCollector
         $formClasses = $this->findClassesInPath($formsDir, $formsNamespace);
         foreach ($formClasses as $formClass) {
             try {
-                $formDoc = (new FormDocCollector($this->formFactory))->collect($formClass);
+                $formDoc = (new FormDocCollector($this->formFactory, $this->logger))->collect($formClass);
             } catch (\Throwable $e) {
                 $this->logger->notice((string) $e);
                 continue;

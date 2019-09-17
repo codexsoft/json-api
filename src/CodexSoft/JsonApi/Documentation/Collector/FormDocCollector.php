@@ -4,7 +4,9 @@
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
 use CodexSoft\Code\Traits\Loggable;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
 use CodexSoft\Code\Helpers\Classes;
@@ -26,8 +28,9 @@ class FormDocCollector
     /** @var FormFactory */
     private $formFactory;
 
-    public function __construct(FormFactory $formFactory)
+    public function __construct(FormFactory $formFactory, LoggerInterface $logger = null)
     {
+        $this->logger = $logger;
         $this->formFactory = $formFactory;
     }
 
@@ -48,13 +51,19 @@ class FormDocCollector
         try {
             $formClassReflection = new \ReflectionClass($formClass);
         } catch (\ReflectionException $e) {
-            throw new \Exception('Failed to create ReflectionClass for '.$formClass.': '.$e);
+            throw new \Exception("SKIPPING $formClass form Failed to create ReflectionClass: ".$e);
             //$this->getLogger()->notice('Failed to create ReflectionClass for '.$formClass.': '.$e);
             //return null;
         }
 
         if ($formClassReflection->isAbstract()) {
-            throw new \Exception("$formClass form SKIPPING: class is abstract");
+            throw new \Exception("SKIPPING form $formClass: class is abstract");
+            //$this->getLogger()->notice("$formClass form SKIPPING: class is abstract");
+            //return null;
+        }
+
+        if (!$formClassReflection->implementsInterface(FormTypeInterface::class)) {
+            throw new \Exception("SKIPPING form $formClass: class does not implement ".FormTypeInterface::class);
             //$this->getLogger()->notice("$formClass form SKIPPING: class is abstract");
             //return null;
         }
