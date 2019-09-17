@@ -36,15 +36,14 @@ function unshiftFirstArgumentIfCorrectFilepath(): ?string
 function getDefaultConfigFilepath(): string
 {
     foreach ([
-                 \dirname(__DIR__, 4).'/config/codexsoft.json-api.php',
-                 //__DIR__.'/../../../config/codexsoft.json-api.php',
-                 //__DIR__.'/../config/codexsoft.json-api.php',
+                 //__DIR__.'/../../../codexsoft.json-api.php',
+                 __DIR__.'/../config/codexsoft.json-api.php',
              ] as $candidate) {
         if (\file_exists(realpath($candidate))) {
             return realpath($candidate);
         }
     }
-    throw new \Exception('Default config file (config/codexsoft.json-api.php) not exists!');
+    throw new \Exception('Default config file not exists!');
 }
 
 $jsonApiConfigFile = unshiftFirstArgumentIfCorrectFilepath() ?: getDefaultConfigFilepath();
