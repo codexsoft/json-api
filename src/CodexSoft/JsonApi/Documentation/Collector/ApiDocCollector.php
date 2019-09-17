@@ -169,7 +169,7 @@ class ApiDocCollector
 
         foreach ($routes as $routeName => $route) {
             try {
-                $actionDoc = (new ActionDocCollector())->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
+                $actionDoc = (new ActionDocCollector($this->logger))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
                 if ($actionDoc) {
                     $actions[$actionDoc->actionClass] = $actionDoc;
                 }

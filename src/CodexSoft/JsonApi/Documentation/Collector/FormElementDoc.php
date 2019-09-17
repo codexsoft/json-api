@@ -23,7 +23,7 @@ class FormElementDoc
     public $exclusiveMaximum;
     public $maximum;
     public $enum;
-    public $label;
+    //public $label;
     public $description;
     public $default;
 

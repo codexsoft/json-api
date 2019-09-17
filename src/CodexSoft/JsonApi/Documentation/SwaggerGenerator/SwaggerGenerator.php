@@ -73,7 +73,7 @@ class SwaggerGenerator
                 'exclusiveMaximum' => $item->exclusiveMaximum,
                 'maximum' => $item->maximum,
                 'enum' => $item->enum,
-                'label' => $item->label,
+                //'label' => $item->label,
                 'description' => $item->description,
                 'default' => $item->default,
             ];
@@ -104,37 +104,41 @@ class SwaggerGenerator
             if ($item->isCollection()) {
                 if ($item->collectionElementsType) {
                     if ($nativeType = $this->detectSwaggerTypeFromNativeType($item->collectionElementsType)) {
-                        $lines[] = ' *   @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
+                        $lines[] = '  @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
                     } else {
                         $entryTypedefRef = $this->referenceToDefinition(new \ReflectionClass($item->collectionElementsType));
-                        $lines[] = ' *     @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
-                        $lines[] = ' *       @SWG\Items(ref="'.$entryTypedefRef.'"),';
-                        $lines[] = ' *     ),';
+                        $lines[] = '    @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
+                        $lines[] = '      @SWG\Items(ref="'.$entryTypedefRef.'"),';
+                        $lines[] = '    ),';
                     }
                 }
             } elseif($item->isForm()) {
                 $propertyReference = $this->referenceToDefinition(new \ReflectionClass($item->swaggerReferencesToClass));
-                $lines[] = ' *     @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
+                $lines[] = '    @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
             } else {
 
                 $enum = $elementExtraAttributes['enum'] ?? null;
                 if (\is_subclass_of($item->fieldTypeClass, BooleanType::class)) {
-                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
+                    $lines[] = '    @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
                 } else if (\is_array($enum) && \is_subclass_of($item->fieldTypeClass, Type\ChoiceType::class) && (
                         Arrays::areIdenticalByValuesStrict($enum,[true,false,null]) ||
                         Arrays::areIdenticalByValuesStrict($enum,[true,false])
                     )
                 ) {
-                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
+                    $lines[] = '    @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
                 } else {
-                    $lines[] = ' *     @SWG\Property(property="'.$name.'", type="'.$this->typeClassToSwaggerType($item->fieldTypeClass).'"'.$elementExtraAttributesString.'),';
+                    $lines[] = '    @SWG\Property(property="'.$name.'", type="'.$this->typeClassToSwaggerType($item->fieldTypeClass).'"'.$elementExtraAttributesString.'),';
                 }
             }
 
         }
 
         if (\count($formDocumentation->requiredFields)) {
-            $lines[] = ' *     required={'.implode(', ',$formDocumentation->requiredFields).'}';
+            $requiredFields = $formDocumentation->requiredFields;
+            \array_walk($requiredFields, function (&$requiredField) {
+                $requiredField = '"'.$requiredField.'"';
+            });
+            $lines[] = '    required={'.implode(', ',$requiredFields).'}';
         }
 
         return $lines;
@@ -231,17 +235,17 @@ class SwaggerGenerator
     {
 
         $lines = [
-            ' * @SWG\Definition(',
-            ' *   definition="'.$title.'",',
-            ' *   type="object",',
+            '@SWG\Definition(',
+            '  definition="'.$title.'",',
+            '  type="object",',
         ];
 
         if ($schema) {
             \array_push($lines,...$schema);
         }
 
-        $lines[] = ' * )';
-        $lines[] = ' *';
+        $lines[] = ')';
+        $lines[] = '';
 
         return $lines;
 
@@ -256,20 +260,20 @@ class SwaggerGenerator
     protected function generateNamedParameter(string $title,array $schema): array
     {
         $parameterLines = [
-            ' * @SWG\Parameter(',
-            ' *   parameter="'.$title.'",',
-            ' *   in="body",',
-            ' *   name="'.$title.'",',
-            ' *   @SWG\Schema(',
+            '@SWG\Parameter(',
+            '  parameter="'.$title.'",',
+            '  in="body",',
+            '  name="'.$title.'",',
+            '  @SWG\Schema(',
         ];
 
         if ($schema) {
             \array_push($parameterLines,...$schema);
         }
 
-        $parameterLines[] = ' *   )';
-        $parameterLines[] = ' * )';
-        $parameterLines[] = ' *';
+        $parameterLines[] = '  )';
+        $parameterLines[] = ')';
+        $parameterLines[] = '';
 
         return $parameterLines;
     }
@@ -295,9 +299,9 @@ class SwaggerGenerator
 
         // generating response
         \array_push($lines, ...[
-            ' * @SWG\Response(',
-            ' *   response="'.ResponseDoc::generateTitleStatic($responseDocumentation->class).'",',
-            ' *   description="'.$responseDocumentation->description.'"',
+            '@SWG\Response(',
+            '  response="'.ResponseDoc::generateTitleStatic($responseDocumentation->class).'",',
+            '  description="'.$responseDocumentation->description.'"',
         ]);
 
         //$responseFormDoc = $this->apiDoc->forms[$responseDocumentation->formClass];
@@ -307,28 +311,28 @@ class SwaggerGenerator
         //    ->parseIntoSchema($responseDocumentation->formClass);
 
         if ($responseFormLines) {
-            $lines[] = ' *   ,@SWG\Schema(';
+            $lines[] = '  ,@SWG\Schema(';
             \array_push($lines, ...$responseFormLines);
-            $lines[] = ' *   )';
+            $lines[] = '  )';
         } else {
             $logger->warning($responseDocumentation->formClass.' has no schema!');
         }
 
         if ($responseDocumentation->example) {
-            $lines[] = ' *   ,examples = {';
-            $lines[] = ' *     "application/json":';
+            $lines[] = '  ,examples = {';
+            $lines[] = '    "application/json":';
             $exampleContent = $responseDocumentation->example;
             $filteredExampleContent = (string) str($exampleContent)->replace('[', '{')->replace(']', '}');
             $exampleLines = explode("\n", $filteredExampleContent);
 
             foreach ($exampleLines as $exampleLine) {
-                $lines[] = ' *     '.$exampleLine;
+                $lines[] = '    '.$exampleLine;
             }
-            $lines[] = ' *   }';
+            $lines[] = '  }';
         }
 
-        $lines[] = ' * )';
-        $lines[] = ' *';
+        $lines[] = ')';
+        $lines[] = '';
 
         return $lines;
     }
@@ -355,48 +359,48 @@ class SwaggerGenerator
         $requestTagsString = \implode(',', $requestTags);
 
         $lines = [
-            ' * @SWG\\'.str($method)->toTitleCase().'(',
-            ' *     path="'.$actionDocumentation->path.'",',
-            ' *     tags={'.$requestTagsString.'},',
-            ' *     summary="'.$actionDocumentation->path.'",',
-            ' *     description="'.$actionDocumentation->description.'",',
+            '@SWG\\'.str($method)->toTitleCase().'(',
+            '    path="'.$actionDocumentation->path.'",',
+            '    tags={'.$requestTagsString.'},',
+            '    summary="'.$actionDocumentation->path.'",',
+            '    description="'.$actionDocumentation->description.'",',
         ];
 
-        $pathVars = $$actionDocumentation->compiledRoute->getPathVariables();
+        $pathVars = $actionDocumentation->compiledRoute->getPathVariables();
 
         if ($pathVars) {
             foreach ($pathVars as $pathVar) {
                 \array_push($lines, ...[
-                    ' *     @SWG\Parameter(',
-                    ' *         type="integer",', // assuming is integer
-                    ' *         description="'.str($pathVar)->toTitleCase().'",',
-                    ' *         in="path",',
-                    ' *         name="'.$pathVar.'",',
-                    ' *         required=true,', // assuming is required
-                    ' *     ),',
+                    '    @SWG\Parameter(',
+                    '        type="integer",', // assuming is integer
+                    '        description="'.str($pathVar)->toTitleCase().'",',
+                    '        in="path",',
+                    '        name="'.$pathVar.'",',
+                    '        required=true,', // assuming is required
+                    '    ),',
                 ]);
             }
         } else {
             $formTitleUnderscored = $this->formTitle($actionDocumentation->inputFormClass);
-            $lines[] = ' *     @SWG\Parameter(ref="#/parameters/'.$formTitleUnderscored.'"),';
+            $lines[] = '    @SWG\Parameter(ref="#/parameters/'.$formTitleUnderscored.'"),';
         }
 
         foreach ($actionDocumentation->responses as $responseHttpCode => $responseClass) {
             $suggestedResponseTitle = ResponseDoc::generateTitleStatic($responseClass);
-            $lines[] = ' *     @SWG\Response(response="'.$responseHttpCode.'", ref="#/responses/'.$suggestedResponseTitle.'"),';
+            $lines[] = '    @SWG\Response(response="'.$responseHttpCode.'", ref="#/responses/'.$suggestedResponseTitle.'"),';
         }
 
         //$parser = new SymfonyGenerateFormDocumentation($this->lib);
         //$responseSchemaContent = $parser->parseIntoSchema($errorCodesClass);
 
-        //$lines[] = ' *       @SWG\Response(response="'.$httpErrorCode.'", description="'.$errorCodeDescription.' ('.$errorCode.')",';
-        //$lines[] = ' *       @SWG\Schema(';
+        //$lines[] = '      @SWG\Response(response="'.$httpErrorCode.'", description="'.$errorCodeDescription.' ('.$errorCode.')",';
+        //$lines[] = '      @SWG\Schema(';
         //\array_push($lines, ...$responseSchemaLinesWithSpecifiedErrorCode);
-        //$lines[] = ' *       )';
-        //$lines[] = ' *     ),';
+        //$lines[] = '      )';
+        //$lines[] = '    ),';
 
-        $lines[] = ' * )';
-        $lines[] = ' *';
+        $lines[] = ')';
+        $lines[] = '';
 
         return $lines;
     }

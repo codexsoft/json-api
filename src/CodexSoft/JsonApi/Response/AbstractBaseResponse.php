@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi\Response;
 
+use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseInterface;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormTypeInterface;
@@ -10,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 
-abstract class AbstractBaseResponse extends JsonResponse implements FormTypeInterface
+abstract class AbstractBaseResponse extends JsonResponse implements FormTypeInterface, SwagenResponseInterface
 {
 
     /**

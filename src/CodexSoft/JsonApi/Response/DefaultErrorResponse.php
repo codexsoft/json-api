@@ -86,4 +86,8 @@ class DefaultErrorResponse extends AbstractBaseResponse
         return $this->errorMessage;
     }
 
+    public static function getSwaggerResponseDescription(): string
+    {
+        return 'Common error response';
+    }
 }

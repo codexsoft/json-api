@@ -28,4 +28,8 @@ class DefaultSuccessResponse extends AbstractBaseResponse
         parent::buildForm($builder, $options);
     }
 
+    public static function getSwaggerResponseDescription(): string
+    {
+        return 'Common success response';
+    }
 }

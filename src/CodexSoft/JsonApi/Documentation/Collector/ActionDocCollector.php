@@ -35,6 +35,7 @@ class ActionDocCollector
         $logger = $this->getLogger();
 
         $routePath = $route->getPath();
+        $docAction->route = $route;
         $docAction->path = $routePath;
 
         $path = $route->getPath();
