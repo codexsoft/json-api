@@ -2,18 +2,28 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SymfonyGenerateFormDocumentation;
+use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseExternalFormInterface;
-use Psr\Log\LoggerInterface;
+use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormTypeInterface;
 use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\JsonApi\Response\AbstractBaseResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseInterface;
 use function CodexSoft\Code\str;
 
-class ResponseDocCollector extends AbstractCollector
+class ResponseDocCollector
 {
+
+    use Loggable;
+
+    /** @var FormFactory */
+    private $formFactory;
+
+    public function __construct(FormFactory $formFactory)
+    {
+        $this->formFactory = $formFactory;
+    }
 
     /**
      * @param string $responseClass
@@ -23,8 +33,8 @@ class ResponseDocCollector extends AbstractCollector
      */
     public function collect(string $responseClass): ResponseDoc
     {
-        $docResponse = new ResponseDoc;
-        $docResponse->class = $responseClass;
+        $responseDoc = new ResponseDoc;
+        $responseDoc->class = $responseClass;
 
         $logger = $this->getLogger();
 
@@ -40,41 +50,55 @@ class ResponseDocCollector extends AbstractCollector
         }
 
         if ($reflection->isAbstract()) {
-            $logger->notice("$responseClass response SKIPPING: class is abstract");
-            return null;
+            throw new \Exception("$responseClass response SKIPPING: class is abstract");
+            //$logger->notice("$responseClass response SKIPPING: class is abstract");
+            //return null;
         }
 
         if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
-            $logger->info("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
-            return null;
+            throw new \Exception("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
+            //$logger->info("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
+            //return null;
         }
 
         /**
          * skip generating definitions if class does not implement auto-generating interface
          */
         if (!$reflection->implementsInterface(SwagenResponseInterface::class)) {
-            $logger->info("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
-            return null;
+            throw new \Exception("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
+            //$logger->info("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
+            //return null;
         }
 
         $logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));
 
         /** @var SwagenResponseInterface $responseClass */
-        $docResponse->description = $responseClass::getSwaggerResponseDescription();
+        $responseDoc->description = $responseClass::getSwaggerResponseDescription();
 
-        if ($reflection->getConstructor()->getNumberOfRequiredParameters() === 0) {
+        if ($reflection->implementsInterface(SwagenResponseExternalFormInterface::class)) {
+            /** @var SwagenResponseExternalFormInterface $responseClass */
+            $responseDoc->formClass = $responseClass::getFormClass();
+            $formReflection = new \ReflectionClass($responseDoc->formClass);
+        } elseif ($reflection->implementsInterface(FormTypeInterface::class)) {
+            $responseDoc->formClass = $responseClass;
+            $formReflection = $reflection;
+        }
 
-            if ($reflection->implementsInterface(ResponseWrappedDataInterface::class)) {
+        if (isset($formReflection) && $formReflection->getConstructor()->getNumberOfRequiredParameters() === 0) {
+
+            if ($formReflection->implementsInterface(ResponseWrappedDataInterface::class)) {
                 /** @var ResponseWrappedDataInterface $responseClass */
                 $responseClass::setGeneratingWrappedDataForResponseDefinition(true);
             }
 
-            $responseDefinitionLines = (new SymfonyGenerateFormDocumentation($this->lib))->generateFormAsDefinition($responseClass);
-            if ($responseDefinitionLines) {
-                \array_push($lines, ...$responseDefinitionLines);
-            }
+            $responseFormDoc = (new FormDocCollector($this->formFactory))->collect($responseDoc->formClass);
+            $responseDoc->formClassDoc = $responseFormDoc;
+            //$responseDefinitionLines = (new SymfonyGenerateFormDocumentation($this->lib))->generateFormAsDefinition($responseClass);
+            //if ($responseDefinitionLines) {
+            //    \array_push($lines, ...$responseDefinitionLines);
+            //}
 
-            if ($reflection->implementsInterface(ResponseWrappedDataInterface::class)) {
+            if ($formReflection->implementsInterface(ResponseWrappedDataInterface::class)) {
                 /** @var ResponseWrappedDataInterface $responseClass */
                 $responseClass::setGeneratingWrappedDataForResponseDefinition(false);
             }
@@ -83,26 +107,14 @@ class ResponseDocCollector extends AbstractCollector
             $logger->warning("$responseClass response skipping generate swagger response DEFINITION: it has required parameters in constructor!");
         }
 
-        if ($reflection->implementsInterface(SwagenResponseExternalFormInterface::class)) {
-            /** @var SwagenResponseExternalFormInterface $responseClass */
-            $docResponse->formClass = $responseClass::getFormClass();
-        } elseif ($reflection->implementsInterface(FormTypeInterface::class)) {
-            $docResponse->formClass = $responseClass;
-        }
-
         // add an manual example
 
         $exampleFileName = str($reflection->getFileName())->removeRight('.php')->append('.json');
         if (\file_exists($exampleFileName)) {
-            $docResponse->example = \file_get_contents($exampleFileName);
+            $responseDoc->example = \file_get_contents($exampleFileName);
         }
 
-        return $docResponse;
-    }
-
-    private function getLogger(): LoggerInterface
-    {
-        return $this->lib->getLogger();
+        return $responseDoc;
     }
 
 }

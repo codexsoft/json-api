@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
+use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionDescriptionInterface;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionExternalFormInterface;
@@ -14,8 +15,10 @@ use Symfony\Component\Routing\Route;
 use CodexSoft\Code\Helpers\Classes;
 use function CodexSoft\Code\str;
 
-class ActionDocCollector extends AbstractCollector
+class ActionDocCollector
 {
+
+    use Loggable;
 
     /** @var string */
     private $pathPrefixToRemove;
@@ -138,11 +141,6 @@ class ActionDocCollector extends AbstractCollector
             }
         }
         return $docAction;
-    }
-
-    private function getLogger(): LoggerInterface
-    {
-        return $this->lib->getLogger();
     }
 
     /**

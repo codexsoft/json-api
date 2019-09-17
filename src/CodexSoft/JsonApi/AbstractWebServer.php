@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi;
 
+use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
@@ -11,7 +12,7 @@ use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\RouteCollectionBuilder;
 use Doctrine\Common\Annotations\AnnotationReader;
 
-abstract class AbstractWebServer extends BaseKernel
+class AbstractWebServer extends BaseKernel
 {
     use MicroKernelTrait;
 
@@ -23,50 +24,50 @@ abstract class AbstractWebServer extends BaseKernel
         return parent::boot();
     }
 
-    public function getCacheDir()
-    {
-        return $this->getProjectDir().'/var/cache/'.$this->environment;
-    }
-
-    public function getLogDir()
-    {
-        return $this->getProjectDir().'/var/log';
-    }
-
     public function registerBundles()
     {
-        $bundlesFile = $this->getProjectDir().'/config/bundles.php';
-        if (!file_exists($bundlesFile)) {
-            return;
+        $bundlesFile = $this->getBundlesFile();
+        if (\file_exists($bundlesFile)) {
+            /** @noinspection PhpIncludeInspection */
+            $contents = require $bundlesFile;
+        } else {
+            $contents = [
+                FrameworkBundle::class => ['all' => true],
+            ];
         }
-        $contents = require $bundlesFile;
+
         foreach ($contents as $class => $envs) {
             if (isset($envs['all']) || isset($envs[$this->environment])) {
                 yield new $class();
             }
         }
-        //return [
-        //    new \Symfony\Bundle\FrameworkBundle\FrameworkBundle,
-        //];
+
     }
 
-    private function getBundlesList(): array
+    private function getConfigDir(): string
     {
+        return $this->getProjectDir().'/config';
+    }
 
+    private function getBundlesFile(): string
+    {
+        return $this->getConfigDir().'/bundles.php';
     }
 
     /**
      * @param ContainerBuilder $container
      * @param LoaderInterface $loader
+     *
+     * @throws \Exception
      */
     protected function configureContainer(ContainerBuilder $container, LoaderInterface $loader)
     {
-        $container->addResource(new FileResource($this->getProjectDir().'/config/bundles.php'));
+        $container->addResource(new FileResource($this->getBundlesFile()));
         $container->loadFromExtension('framework', [
             'secret' => 'S0ME_SECRET'
         ]);
 
-        $confDir = $this->getProjectDir().'/config';
+        $confDir = $this->getConfigDir();
 
         //$loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
         //$loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
@@ -81,7 +82,8 @@ abstract class AbstractWebServer extends BaseKernel
      */
     protected function configureRoutes(RouteCollectionBuilder $routes)
     {
-        $routes->import($this->getProjectDir().'/src/App/Action/', '/', 'annotation');
+        //$routes->import($this->getProjectDir().'/src/App/Action/', '/', 'annotation');
+        $routes->import($this->getProjectDir().'/src/', '/', 'annotation');
 
         //$routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
         //$routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');

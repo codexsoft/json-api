@@ -3,6 +3,8 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
+use CodexSoft\Code\Traits\Loggable;
+use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
 use CodexSoft\Code\Helpers\Classes;
@@ -14,10 +16,20 @@ use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseInterface
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 
-class FormDocCollector extends AbstractCollector
+class FormDocCollector
 {
 
+    use Loggable;
+
     public const OPTIONS_FIELD_NAME = 'data_collector/passed_options';
+
+    /** @var FormFactory */
+    private $formFactory;
+
+    public function __construct(FormFactory $formFactory)
+    {
+        $this->formFactory = $formFactory;
+    }
 
     /**
      * @param string $formClass
@@ -30,7 +42,22 @@ class FormDocCollector extends AbstractCollector
         $docForm = new FormDoc;
         $docForm->class = $formClass;
 
-        $formFactory = $this->lib->getFormFactory();
+        //$formFactory = $this->lib->getFormFactory();
+        $formFactory = $this->formFactory;
+
+        try {
+            $formClassReflection = new \ReflectionClass($formClass);
+        } catch (\ReflectionException $e) {
+            throw new \Exception('Failed to create ReflectionClass for '.$formClass.': '.$e);
+            //$this->getLogger()->notice('Failed to create ReflectionClass for '.$formClass.': '.$e);
+            //return null;
+        }
+
+        if ($formClassReflection->isAbstract()) {
+            throw new \Exception("$formClass form SKIPPING: class is abstract");
+            //$this->getLogger()->notice("$formClass form SKIPPING: class is abstract");
+            //return null;
+        }
 
         $formBuilder = $formFactory->create($formClass);
         $elements = $formBuilder->all();

@@ -2,42 +2,87 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use Psr\Log\LoggerInterface;
-use Symfony\Component\Routing\Route;
+use CodexSoft\Code\Helpers\Files;
+use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\JsonApi\JsonApiSchema;
+use Symfony\Component\Form\FormFactory;
+use Symfony\Component\Routing\Router;
 
-class ApiDocCollector extends AbstractCollector
+class ApiDocCollector
 {
+
+    use Loggable;
+
+    /** @var JsonApiSchema */
+    private $jsonApiSchema;
+
+    /** @var Router */
+    private $router;
+
+    /** @var FormFactory */
+    private $formFactory;
+
+    public function __construct(Router $router, FormFactory $formFactory, JsonApiSchema $jsonApiSchema)
+    {
+        $this->router = $router;
+        $this->jsonApiSchema = $jsonApiSchema;
+        $this->formFactory = $formFactory;
+    }
 
     /**
      * @return ApiDoc
      * @throws \ReflectionException
      * @throws \Throwable
      */
-    public function collect(): ApiDoc
+    public function collect(array $paths): ApiDoc
     {
         $docApi = new ApiDoc;
-        $docApi->actions = $this->collectActions();
 
-        $formsClassMap = $this->formsClassesMap ?: $this->getDefaultFormsClassMap();
-        foreach ($formsClassMap as $path => $namespace) {
-            \array_push($docApi->forms, ...$this->collectForms($path, $namespace));
+        $pathPrefixToRemove = '';
+        $docApi->actions = $this->collectActions($pathPrefixToRemove);
+
+        //$formsClassMap = $this->formsClassesMap ?: $this->getDefaultFormsClassMap();
+        //$formsClassMap = [
+        //    $this->jsonApiSchema->
+        //];
+        foreach ($paths as $path => $namespace) {
+            /** @noinspection SlowArrayOperationsInLoopInspection */
+            $docApi->forms = \array_merge($docApi->forms, $this->collectForms($path, $namespace));
+            //\array_push($docApi->forms, ...$this->collectForms($path, $namespace));
         }
 
-        $responsesClassMap = $this->responsesClassesMap ?: $this->getDefaultResponsesClassMap();
-        foreach ($responsesClassMap as $path => $namespace) {
-            \array_push($docApi->responses, ...$this->collectResponses($this->pathPrefixToRemove, $path, $namespace));
+        //$responsesClassMap = $this->responsesClassesMap ?: $this->getDefaultResponsesClassMap();
+        //foreach ($responsesClassMap as $path => $namespace) {
+        foreach ($paths as $path => $namespace) {
+            /** @noinspection SlowArrayOperationsInLoopInspection */
+            $docApi->responses = \array_merge($docApi->responses, $this->collectResponses($path, $namespace));
+            //\array_push($docApi->responses, ...$this->collectResponses($path, $namespace));
         }
 
         return $docApi;
     }
 
-    protected function collectResponses(?string $pathPrefixToRemove, string $responsesDir, string $responsesNamespace): array
+    /**
+     * @param string $responsesDir
+     * @param string $responsesNamespace
+     *
+     * @return array
+     * @throws \ReflectionException
+     */
+    protected function collectResponses(string $responsesDir, string $responsesNamespace): array
     {
         $responses = [];
-        $responseClasses = $this->lib->findClassesInPath($responsesDir, $responsesNamespace);
+        $responseClasses = $this->findClassesInPath($responsesDir, $responsesNamespace);
         $responseClasses = \array_unique($responseClasses);
         foreach ($responseClasses as $responseClass) {
-            $responseDoc = (new ResponseDocCollector($this->lib))->collect($responseClass);
+
+            try {
+                $responseDoc = (new ResponseDocCollector($this->formFactory))->collect($responseClass);
+            } catch (\Throwable $e) {
+                $this->logger->notice((string) $e);
+                continue;
+            }
+
             if ($responseDoc) {
                 $responses[$responseClass] = $responseDoc;
             }
@@ -50,19 +95,61 @@ class ApiDocCollector extends AbstractCollector
      * @param $formsNamespace
      *
      * @return FormDoc[]
-     * @throws \ReflectionException
      */
     protected function collectForms($formsDir, $formsNamespace): array
     {
         $forms = [];
-        $formClasses = $this->lib->findClassesInPath($formsDir, $formsNamespace);
+        $formClasses = $this->findClassesInPath($formsDir, $formsNamespace);
         foreach ($formClasses as $formClass) {
-            $formDoc = (new FormDocCollector($this->lib))->collect($formClass);
-            if ($formDoc) {
+            try {
+                $formDoc = (new FormDocCollector($this->formFactory))->collect($formClass);
+            } catch (\Throwable $e) {
+                $this->logger->notice((string) $e);
+                continue;
+            }
+
+            if ($formDoc instanceof FormDoc) {
                 $forms[$formClass] = $formDoc;
             }
         }
         return $forms;
+    }
+
+    /**
+     * Найти все классы, расположенные в заданном пути
+     *
+     * @param string $path
+     * @param $namespace
+     *
+     * @return array
+     */
+    public function findClassesInPath(string $path, $namespace = ''): array
+    {
+        $files = Files::listFiles($path, false); // ищем не рекурсивно
+
+        $classes = [];
+
+        foreach ($files as $fileName) {
+
+            $fullFilePath = $path.'/'.$fileName;
+            if (\is_dir($fullFilePath)) {
+                /** @noinspection SlowArrayOperationsInLoopInspection */
+                $classes = \array_merge($classes, $this->findClassesInPath($path.'/'.$fileName, $namespace.$fileName.'\\'));
+            } else {
+
+                // убедимся что файл — PHP
+                if (!(pathinfo($fileName, PATHINFO_EXTENSION) === 'php')) {
+                    continue;
+                }
+
+                $className = Files::removeExtension($fileName);
+                $fqnClassName = $namespace.$className;
+                $classes[] = $fqnClassName;
+            }
+
+        }
+
+        return $classes;
     }
 
     /**
@@ -75,13 +162,12 @@ class ApiDocCollector extends AbstractCollector
     {
         $actions = [];
 
-        $router = $this->lib->getRouter();
-        /** @var Route[] $routes */
+        $router = $this->router;
         $routes = $router->getRouteCollection();
 
         foreach ($routes as $routeName => $route) {
             try {
-                $actionDoc = (new ActionDocCollector($this->lib))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
+                $actionDoc = (new ActionDocCollector())->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
                 if ($actionDoc) {
                     $actions[$actionDoc->actionClass] = $actionDoc;
                 }
@@ -93,11 +179,6 @@ class ApiDocCollector extends AbstractCollector
         }
 
         return $actions;
-    }
-
-    private function getLogger(): LoggerInterface
-    {
-        return $this->lib->getLogger();
     }
 
 }

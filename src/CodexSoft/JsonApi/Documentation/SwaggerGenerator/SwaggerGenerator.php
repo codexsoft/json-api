@@ -3,24 +3,24 @@
 
 namespace CodexSoft\JsonApi\Documentation\SwaggerGenerator;
 
+use CodexSoft\Code\Helpers\Arrays;
 use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\Documentation\Collector\ActionDoc;
 use CodexSoft\JsonApi\Documentation\Collector\ApiDoc;
-use CodexSoft\JsonApi\Documentation\Collector\ResponseDoc;
-use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
-use Symfony\Component\Form\Extension\Core\Type;
-use CodexSoft\Code\Helpers\Arrays;
 use CodexSoft\JsonApi\Documentation\Collector\FormDoc;
+use CodexSoft\JsonApi\Documentation\Collector\ResponseDoc;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
-use Symfony\Component\HttpFoundation\Request;
+use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
 use function CodexSoft\Code\str;
+use Symfony\Component\Form\Extension\Core\Type;
+use Symfony\Component\HttpFoundation\Request;
 
 class SwaggerGenerator
 {
 
     use Loggable;
 
-    public const CONVERTER = [
+    protected const CONVERTER = [
         Type\CheckboxType::class => 'boolean',
         Type\ChoiceType::class => 'mixed',
         Type\CollectionType::class => 'array',
@@ -40,12 +40,22 @@ class SwaggerGenerator
     private $apiDoc;
 
     /**
+     * SwaggerGenerator constructor.
+     *
+     * @param ApiDoc $apiDoc
+     */
+    public function __construct(ApiDoc $apiDoc)
+    {
+        $this->apiDoc = $apiDoc;
+    }
+
+    /**
      * @param FormDoc $formDocumentation
      *
      * @return string[]
      * @throws \ReflectionException
      */
-    public function generateFormSchema(FormDoc $formDocumentation): array
+    protected function generateFormSchema(FormDoc $formDocumentation): array
     {
         $lines = [];
 
@@ -130,18 +140,18 @@ class SwaggerGenerator
         return $lines;
     }
 
-    public function referenceToDefinition(\ReflectionClass $reflectionClass): string
+    protected function referenceToDefinition(\ReflectionClass $reflectionClass): string
     {
         return '#/definitions/'.$this->formTitle($reflectionClass);
     }
 
-    public function typeClassToSwaggerType($class): ?string
+    protected function typeClassToSwaggerType($class): ?string
     {
         $detected = $this->detectSwaggerTypeFromNativeType($class);
         return $detected ?? 'string';
     }
 
-    public function detectSwaggerTypeFromNativeType($class): ?string
+    protected function detectSwaggerTypeFromNativeType($class): ?string
     {
         if (\array_key_exists($class, self::CONVERTER)) {
             return self::CONVERTER[$class];
@@ -155,7 +165,7 @@ class SwaggerGenerator
      * @return string[]
      * @throws \ReflectionException
      */
-    public function generateFormAsDefinition(FormDoc $formDoc): array
+    protected function generateFormAsDefinition(FormDoc $formDoc): array
     {
         //$reflection = new \ReflectionClass( $formClass );
         //$schemaContent = $this->parseIntoSchema($formClass);
@@ -172,7 +182,7 @@ class SwaggerGenerator
      * @return string[]
      * @throws \ReflectionException
      */
-    public function generateFormAsParameter(FormDoc $formDoc): array
+    protected function generateFormAsParameter(FormDoc $formDoc): array
     {
         //$reflection = new \ReflectionClass( $formClass );
         //$schemaContent = $this->parseIntoSchema($formClass);
@@ -188,7 +198,7 @@ class SwaggerGenerator
      * @return string[]
      * @throws \ReflectionException
      */
-    public function generateFormAsParameterAndDefinition(FormDoc $formDoc): array
+    protected function generateFormAsParameterAndDefinition(FormDoc $formDoc): array
     {
         $lines = [];
         $schemaContent = $this->generateFormSchema($formDoc);
@@ -203,7 +213,7 @@ class SwaggerGenerator
         return $lines;
     }
 
-    public function formTitle(string $formClass): string
+    protected function formTitle(string $formClass): string
     {
         return (string) str($formClass)
             ->replace('\\', '_')
@@ -217,7 +227,7 @@ class SwaggerGenerator
      *
      * @return array
      */
-    public function generateNamedDefinition(string $title,array $schema): array
+    protected function generateNamedDefinition(string $title,array $schema): array
     {
 
         $lines = [
@@ -243,7 +253,7 @@ class SwaggerGenerator
      *
      * @return array
      */
-    public function generateNamedParameter(string $title,array $schema): array
+    protected function generateNamedParameter(string $title,array $schema): array
     {
         $parameterLines = [
             ' * @SWG\Parameter(',
@@ -264,7 +274,13 @@ class SwaggerGenerator
         return $parameterLines;
     }
 
-    public function generateResponse(ResponseDoc $responseDocumentation): ?array
+    /**
+     * @param ResponseDoc $responseDocumentation
+     *
+     * @return array|null
+     * @throws \ReflectionException
+     */
+    protected function generateResponse(ResponseDoc $responseDocumentation): ?array
     {
         $lines = [];
         $logger = $this->getLogger();
@@ -317,7 +333,12 @@ class SwaggerGenerator
         return $lines;
     }
 
-    public function generateAction(ActionDoc $actionDocumentation): ?array
+    /**
+     * @param ActionDoc $actionDocumentation
+     *
+     * @return array|null
+     */
+    protected function generateAction(ActionDoc $actionDocumentation): ?array
     {
         $methods = $actionDocumentation->route->getMethods();
         $method = Request::METHOD_POST;
@@ -376,6 +397,29 @@ class SwaggerGenerator
 
         $lines[] = ' * )';
         $lines[] = ' *';
+
+        return $lines;
+    }
+
+    /**
+     * @return string[]
+     * @throws \ReflectionException
+     */
+    public function generate(): array
+    {
+        $lines = [];
+
+        foreach ($this->apiDoc->forms as $formDoc) {
+            \array_push($lines, ...$this->generateFormAsParameterAndDefinition($formDoc));
+        }
+
+        foreach ($this->apiDoc->responses as $responseDoc) {
+            \array_push($lines, ...$this->generateResponse($responseDoc));
+        }
+
+        foreach ($this->apiDoc->actions as $actionDoc) {
+            \array_push($lines, ...$this->generateAction($actionDoc));
+        }
 
         return $lines;
     }

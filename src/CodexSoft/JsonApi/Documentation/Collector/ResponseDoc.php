@@ -15,6 +15,9 @@ class ResponseDoc
     /** @var string */
     public $formClass;
 
+    /** @var FormDoc because of optional data-wrapper in response, form should be generated */
+    public $formClassDoc;
+
     /** @var string */
     public $example;
 
