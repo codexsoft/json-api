@@ -40,8 +40,8 @@ function unshiftFirstArgumentIfCorrectFilepath(): ?string
 function getDefaultConfigFilepath(): string
 {
     foreach ([
-                 __DIR__.'/../../../codexsoft.json-api.php',
-                 //__DIR__.'/../config/codexsoft.json-api.php',
+                 //__DIR__.'/../../../codexsoft.json-api.php',
+                 __DIR__.'/../config/codexsoft.json-api.php',
              ] as $candidate) {
         if (\file_exists(realpath($candidate))) {
             return realpath($candidate);
