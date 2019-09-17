@@ -50,6 +50,29 @@ class SwaggerGenerator
     }
 
     /**
+     * @return string[]
+     * @throws \ReflectionException
+     */
+    public function generate(): array
+    {
+        $lines = [];
+
+        foreach ($this->apiDoc->forms as $formDoc) {
+            \array_push($lines, ...$this->generateFormAsParameterAndDefinition($formDoc));
+        }
+
+        foreach ($this->apiDoc->responses as $responseDoc) {
+            \array_push($lines, ...$this->generateResponse($responseDoc));
+        }
+
+        foreach ($this->apiDoc->actions as $actionDoc) {
+            \array_push($lines, ...$this->generateAction($actionDoc));
+        }
+
+        return $lines;
+    }
+
+    /**
      * @param FormDoc $formDocumentation
      *
      * @return string[]
@@ -171,12 +194,9 @@ class SwaggerGenerator
      */
     protected function generateFormAsDefinition(FormDoc $formDoc): array
     {
-        //$reflection = new \ReflectionClass( $formClass );
-        //$schemaContent = $this->parseIntoSchema($formClass);
-        //return $this->generateNamedDefinition($this->lib->formTitle($reflection), $schemaContent);
-
         $schemaContent = $this->generateFormSchema($formDoc);
         $formTitle = $this->formTitle($formDoc->class);
+
         return $this->generateNamedDefinition($this->formTitle($formTitle), $schemaContent);
     }
 
@@ -188,11 +208,9 @@ class SwaggerGenerator
      */
     protected function generateFormAsParameter(FormDoc $formDoc): array
     {
-        //$reflection = new \ReflectionClass( $formClass );
-        //$schemaContent = $this->parseIntoSchema($formClass);
-
         $schemaContent = $this->generateFormSchema($formDoc);
         $formTitle = $this->formTitle($formDoc->class);
+
         return $this->generateNamedParameter($this->formTitle($formTitle), $schemaContent);
     }
 
@@ -209,10 +227,6 @@ class SwaggerGenerator
         $formTitle = $this->formTitle($formDoc->class);
         \array_push($lines, ...$this->generateNamedParameter($formTitle, $schemaContent));
         \array_push($lines, ...$this->generateNamedDefinition($formTitle, $schemaContent));
-
-        //$lines = $this->generateNamedParameter($this->formTitle($formDoc->class), $schemaContent);
-        //$definitionLines = $this->generateNamedDefinition($this->formTitle($formDoc->class), $schemaContent);
-        //\array_push($lines, ...$definitionLines);
 
         return $lines;
     }
@@ -248,7 +262,6 @@ class SwaggerGenerator
         $lines[] = '';
 
         return $lines;
-
     }
 
     /**
@@ -290,7 +303,6 @@ class SwaggerGenerator
         $logger = $this->getLogger();
 
         // generating response as definition
-        //$responseDefinitionLines = (new SymfonyGenerateFormDocumentation($this->lib))->generateFormAsDefinition($responseDocumentation->class);
         $responseFormDoc = $this->apiDoc->forms[$responseDocumentation->formClass];
         $responseDefinitionLines = $this->generateFormAsDefinition($responseFormDoc); // need to get
         if ($responseDefinitionLines) {
@@ -306,9 +318,6 @@ class SwaggerGenerator
 
         //$responseFormDoc = $this->apiDoc->forms[$responseDocumentation->formClass];
         $responseFormLines = $this->generateFormSchema($responseFormDoc);
-
-        //$responseFormLines = (new SymfonyGenerateFormDocumentation($this->lib))
-        //    ->parseIntoSchema($responseDocumentation->formClass);
 
         if ($responseFormLines) {
             $lines[] = '  ,@SWG\Schema(';
@@ -390,40 +399,8 @@ class SwaggerGenerator
             $lines[] = '    @SWG\Response(response="'.$responseHttpCode.'", ref="#/responses/'.$suggestedResponseTitle.'"),';
         }
 
-        //$parser = new SymfonyGenerateFormDocumentation($this->lib);
-        //$responseSchemaContent = $parser->parseIntoSchema($errorCodesClass);
-
-        //$lines[] = '      @SWG\Response(response="'.$httpErrorCode.'", description="'.$errorCodeDescription.' ('.$errorCode.')",';
-        //$lines[] = '      @SWG\Schema(';
-        //\array_push($lines, ...$responseSchemaLinesWithSpecifiedErrorCode);
-        //$lines[] = '      )';
-        //$lines[] = '    ),';
-
         $lines[] = ')';
         $lines[] = '';
-
-        return $lines;
-    }
-
-    /**
-     * @return string[]
-     * @throws \ReflectionException
-     */
-    public function generate(): array
-    {
-        $lines = [];
-
-        foreach ($this->apiDoc->forms as $formDoc) {
-            \array_push($lines, ...$this->generateFormAsParameterAndDefinition($formDoc));
-        }
-
-        foreach ($this->apiDoc->responses as $responseDoc) {
-            \array_push($lines, ...$this->generateResponse($responseDoc));
-        }
-
-        foreach ($this->apiDoc->actions as $actionDoc) {
-            \array_push($lines, ...$this->generateAction($actionDoc));
-        }
 
         return $lines;
     }
