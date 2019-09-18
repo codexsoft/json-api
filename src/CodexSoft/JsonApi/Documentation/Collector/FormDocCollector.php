@@ -56,7 +56,12 @@ class FormDocCollector
 
         if ($formClassReflection->isAbstract()) {
             //throw new \Exception("SKIPPING form $formClass: class is abstract");
-            $this->getLogger()->debug("SKIPPING form $formClass: class is abstract");
+            $this->logger->debug("SKIPPING form $formClass: class is abstract");
+            return null;
+        }
+
+        if ($formClassReflection->isInterface()) {
+            $this->logger->debug("SKIPPING form $formClass: is interface");
             return null;
         }
 

@@ -73,6 +73,11 @@ class ActionDocCollector
             //return null;
         }
 
+        if ($actionClassReflection->isInterface()) {
+            $logger->debug("SKIPPING action $actionClassReflection: is interface");
+            return null;
+        }
+
         if ($actionClassReflection->isAbstract()) {
             //throw new \Exception("SKIPPING action $actionClassReflection: class is abstract");
             $logger->debug("SKIPPING action $actionClassReflection: class is abstract");

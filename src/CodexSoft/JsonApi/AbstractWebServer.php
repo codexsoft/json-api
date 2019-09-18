@@ -82,7 +82,6 @@ class AbstractWebServer extends BaseKernel
     protected function configureRoutes(RouteCollectionBuilder $routes)
     {
         $routes->import($this->getProjectDir().'/src/', '/', 'annotation');
-        $routes->import($this->getProjectDir().'/tests/unit/', '/', 'annotation');
 
         $confDir = $this->getConfigDir();
         $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');

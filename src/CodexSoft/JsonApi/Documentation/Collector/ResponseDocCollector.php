@@ -59,6 +59,11 @@ class ResponseDocCollector
             return null;
         }
 
+        if ($reflection->isInterface()) {
+            $this->logger->debug("SKIPPING response $responseClass: is interface");
+            return null;
+        }
+
         if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
             //throw new \Exception("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
             $logger->info("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
