@@ -25,6 +25,7 @@ use function CodexSoft\Code\str;
 
 /**
  * Генерация документации к запросам (экшнам)
+ * @deprecated SwaggerGenerator is used now
  */
 class SwagenGenerateActionDocumentation
 {

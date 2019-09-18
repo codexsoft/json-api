@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Route;
 
 /**
  * Swagger API documentation auto generator
+ * @deprecated SwaggerGenerator is used now
  */
 class SwagenGenerateApiDocumentation
 {

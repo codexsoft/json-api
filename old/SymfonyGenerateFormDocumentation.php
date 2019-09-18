@@ -16,6 +16,9 @@ use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
 
+/**
+ * @deprecated SwaggerGenerator is used now
+ */
 class SymfonyGenerateFormDocumentation
 {
 

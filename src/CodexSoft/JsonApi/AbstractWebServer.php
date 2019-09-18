@@ -21,7 +21,6 @@ class AbstractWebServer extends BaseKernel
     public function boot()
     {
         AnnotationReader::addGlobalIgnoredNamespace('SWG');
-        //Shortcuts::register();
         return parent::boot();
     }
 

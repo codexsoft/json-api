@@ -11,7 +11,7 @@ class Add extends DocumentedFormAction
 {
     
     /**
-     * @Route("", methods={"POST"})
+     * @Route("/product/add", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function __invoke(): Response

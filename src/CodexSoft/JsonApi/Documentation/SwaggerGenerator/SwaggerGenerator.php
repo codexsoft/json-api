@@ -11,6 +11,7 @@ use CodexSoft\JsonApi\Documentation\Collector\FormDoc;
 use CodexSoft\JsonApi\Documentation\Collector\ResponseDoc;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
+use Symfony\Component\HttpFoundation\Response;
 use function CodexSoft\Code\str;
 use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\HttpFoundation\Request;
@@ -57,7 +58,25 @@ class SwaggerGenerator
     {
         $lines = [];
 
+        \array_push($lines, ...[
+            '@SWG\Swagger(',
+            '    schemes={"https"},',
+            '    host="'.($_SERVER['HTTP_HOST'] ?? 'localhost').'",',
+            '    basePath="",',
+            '    consumes={"application/json"},',
+            '    produces={"application/json"},',
+            '    @SWG\Info(',
+            '        version="1.0.0",',
+            '        title="Test API",',
+            '        description="Булевы значения принимаются в виде INT {0|1}, для некоторых полей допустим набор {0|1|null}",',
+            '    )',
+            ')',
+        ]);
+
         foreach ($this->apiDoc->forms as $formDoc) {
+            if (\is_subclass_of($formDoc->class, Response::class)) {
+                continue;
+            }
             \array_push($lines, ...$this->generateFormAsParameterAndDefinition($formDoc));
         }
 
@@ -95,10 +114,10 @@ class SwaggerGenerator
                 'minimum' => $item->minimum,
                 'exclusiveMaximum' => $item->exclusiveMaximum,
                 'maximum' => $item->maximum,
-                'enum' => $item->enum,
+                'enum' => $item->choices,
                 //'label' => $item->label,
-                'description' => $item->description,
-                'default' => $item->default,
+                'description' => $item->label,
+                'default' => $item->defaultValue,
             ];
 
             if ($elementExtraAttributes) {
@@ -125,32 +144,32 @@ class SwaggerGenerator
             }
 
             if ($item->isCollection()) {
-                if ($item->collectionElementsType) {
-                    if ($nativeType = $this->detectSwaggerTypeFromNativeType($item->collectionElementsType)) {
+                if ($item->collectionItemsClass) {
+                    if ($nativeType = $this->detectSwaggerTypeFromNativeType($item->collectionItemsClass)) {
                         $lines[] = '  @SWG\Property(property="'.$name.'", type="array", @SWG\Items(type="'.$nativeType.'") '.$elementExtraAttributesString.'),';
                     } else {
-                        $entryTypedefRef = $this->referenceToDefinition(new \ReflectionClass($item->collectionElementsType));
+                        $entryTypedefRef = $this->referenceToDefinition(new \ReflectionClass($item->collectionItemsClass));
                         $lines[] = '    @SWG\Property(property="'.$name.'", type="array" '.$elementExtraAttributesString.',';
                         $lines[] = '      @SWG\Items(ref="'.$entryTypedefRef.'"),';
                         $lines[] = '    ),';
                     }
                 }
             } elseif($item->isForm()) {
-                $propertyReference = $this->referenceToDefinition(new \ReflectionClass($item->swaggerReferencesToClass));
+                $propertyReference = $this->referenceToDefinition(new \ReflectionClass($item->fieldReferencesToFormClass));
                 $lines[] = '    @SWG\Property(property="'.$name.'", allOf={@SWG\Schema(ref="'.$propertyReference.'")}'.$elementExtraAttributesString.'),';
             } else {
 
                 $enum = $elementExtraAttributes['enum'] ?? null;
-                if (\is_subclass_of($item->fieldTypeClass, BooleanType::class)) {
+                if (\is_subclass_of($item->fieldFormTypeClass, BooleanType::class)) {
                     $lines[] = '    @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
-                } else if (\is_array($enum) && \is_subclass_of($item->fieldTypeClass, Type\ChoiceType::class) && (
+                } else if (\is_array($enum) && \is_subclass_of($item->fieldFormTypeClass, Type\ChoiceType::class) && (
                         Arrays::areIdenticalByValuesStrict($enum,[true,false,null]) ||
                         Arrays::areIdenticalByValuesStrict($enum,[true,false])
                     )
                 ) {
                     $lines[] = '    @SWG\Property(property="'.$name.'", type="boolean"'.$elementExtraAttributesString.'),';
                 } else {
-                    $lines[] = '    @SWG\Property(property="'.$name.'", type="'.$this->typeClassToSwaggerType($item->fieldTypeClass).'"'.$elementExtraAttributesString.'),';
+                    $lines[] = '    @SWG\Property(property="'.$name.'", type="'.$this->typeClassToSwaggerType($item->fieldFormTypeClass).'"'.$elementExtraAttributesString.'),';
                 }
             }
 

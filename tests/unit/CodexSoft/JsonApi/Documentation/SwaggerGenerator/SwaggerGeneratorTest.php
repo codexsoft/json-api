@@ -17,7 +17,7 @@ class SwaggerGeneratorTest extends TestCase
 
     public function testGenerate()
     {
-        $kernel = new AbstractWebServer('dev', false);
+        $kernel = new AbstractWebServer('dev', true);
         $kernel->boot();
 
         $container = $kernel->getContainer();
@@ -49,7 +49,6 @@ class SwaggerGeneratorTest extends TestCase
             'namespace App\Definitions;',
             '',
             '/**',
-            '',
         ]).$generatedCode."*/\nclass Definitions {}";
 
         $fs = new Filesystem();

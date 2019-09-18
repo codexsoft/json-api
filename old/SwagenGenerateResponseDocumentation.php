@@ -18,6 +18,9 @@ use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormTypeInterface;
 use function CodexSoft\Code\str;
 
+/**
+ * @deprecated SwaggerGenerator is used now
+ */
 class SwagenGenerateResponseDocumentation
 {
 

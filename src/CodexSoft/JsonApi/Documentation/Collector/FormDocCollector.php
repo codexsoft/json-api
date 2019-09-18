@@ -7,6 +7,7 @@ use CodexSoft\Code\Traits\Loggable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormTypeInterface;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
 use CodexSoft\Code\Helpers\Classes;
@@ -62,10 +63,13 @@ class FormDocCollector
             //return null;
         }
 
-        if (!$formClassReflection->implementsInterface(FormTypeInterface::class)) {
-            throw new \Exception("SKIPPING form $formClass: class does not implement ".FormTypeInterface::class);
-            //$this->getLogger()->notice("$formClass form SKIPPING: class is abstract");
-            //return null;
+        //if (!$formClassReflection->implementsInterface(FormTypeInterface::class)) {
+        //    throw new \Exception("SKIPPING form $formClass: class does not implement ".FormTypeInterface::class);
+        //}
+
+        //if (!$formClassReflection->isSubclassOf(AbstractForm::class) && !$formClassReflection->isSubclassOf(Response::class)) {
+        if (!$formClassReflection->isSubclassOf(AbstractForm::class) && !$formClassReflection->isSubclassOf(Response::class)) {
+            throw new \Exception("SKIPPING form $formClass: class does not implement ".AbstractForm::class);
         }
 
         $formBuilder = $formFactory->create($formClass);
@@ -80,7 +84,7 @@ class FormDocCollector
             $elementInnerType = $element->getConfig()->getType()->getInnerType();
             $elementInnerTypeClass = \get_class($elementInnerType);
 
-            $docElement->fieldTypeClass = $elementInnerTypeClass;
+            $docElement->fieldFormTypeClass = $elementInnerTypeClass;
 
             if ($config->hasAttribute(self::OPTIONS_FIELD_NAME)) {
                 $passedOptions = $config->getAttribute(self::OPTIONS_FIELD_NAME);
@@ -91,7 +95,7 @@ class FormDocCollector
                 $passedOptions = $config->getOptions();
             }
 
-            $docElement->description = $passedOptions['label'] ?? '';
+            $docElement->label = $passedOptions['label'] ?? '';
 
             if (isset($passedOptions['example'])) {
                 $docElement->example = htmlspecialchars($passedOptions['example']);
@@ -100,9 +104,9 @@ class FormDocCollector
             if (array_key_exists('default', $passedOptions)
                 && ($passedOptions['default'] !== FormFieldDefaultValueExtension::UNDEFINED)
             ) {
-                $docElement->default = $passedOptions['default'];
-                if (($elementInnerTypeClass === BooleanType::class) && \is_bool($docElement->default)) {
-                    $docElement->default = $docElement->default ? BooleanType::VALUE_TRUE : BooleanType::VALUE_FALSE;
+                $docElement->defaultValue = $passedOptions['default'];
+                if (($elementInnerTypeClass === BooleanType::class) && \is_bool($docElement->defaultValue)) {
+                    $docElement->defaultValue = $docElement->defaultValue ? BooleanType::VALUE_TRUE : BooleanType::VALUE_FALSE;
                 }
             }
 
@@ -110,79 +114,66 @@ class FormDocCollector
             // todo: empty_data is not very good option, avoiding using it
 
             if ($elementInnerTypeClass === Type\ChoiceType::class) {
-                $docElement->enum = \array_values($passedOptions['choices'] ?? []);
+                $docElement->choices = \array_values($passedOptions['choices'] ?? []);
             }
+
+            $docElement->isRequired = false;
+            $docElement->isNotBlank = false;
+            $docElement->isNotNull = false;
+
+
+            //foreach($constraints as $constraint) {
+                // // todo: if field has default value, ignore NotBlank and avoid to set field as required?
+                //if ($constraint instanceof Constraints\NotBlank) {
+                //    $docElement->isRequired = true;
+                //    $docElement->isNotBlank = true;
+                //    $docForm->requiredFields[] = $name;
+                //    break;
+                //}
+                //
+                //if ($constraint instanceof Constraints\NotNull) {
+                //    $docElement->isRequired = true;
+                //    $docElement->isNotNull = true;
+                //    $docForm->requiredFields[] = $name;
+                //    break;
+                //}
+            //
+            //}
+
+            //if ($elementInnerTypeClass === BooleanType::class) {
+            //
+            //    $fieldIsNotNull = false;
+            //    foreach($constraints as $constraint) {
+            //        if ($constraint instanceof Constraints\NotNull) {
+            //            $fieldIsNotNull = true;
+            //            break;
+            //        }
+            //    }
+            //
+            //    if ($fieldIsNotNull) {
+            //        $docElement->choices = [0,1]; // [true,false]
+            //    } else {
+            //        $docElement->choices = [0,1,null]; // [true,false,null]
+            //    }
+            //
+            //}
 
             $constraints = $passedOptions['constraints'] ?? [];
-            foreach($constraints as $constraint) {
-                // todo: if field has default value, ignore NotBlank and avoid to set field as required?
-                if ($constraint instanceof Constraints\NotBlank) {
-                    $docForm->requiredFields[] = $name;
-                    break;
-                }
+            $docElement->constraints = $constraints;
+            $docElement->analyzeConstraints();
 
-                if ($constraint instanceof Constraints\NotNull) {
-                    $docForm->requiredFields[] = $name;
-                    break;
-                }
-
+            // todo: if field has default value, ignore NotBlank and avoid to set field as required?
+            if ($docElement->isRequired) {
+                $docForm->requiredFields[] = $name;
             }
 
-            if ($elementInnerTypeClass === BooleanType::class) {
-
-                $fieldIsNotNull = false;
-                foreach($constraints as $constraint) {
-                    if ($constraint instanceof Constraints\NotNull) {
-                        $fieldIsNotNull = true;
-                        break;
-                    }
-                }
-
-                if ($fieldIsNotNull) {
-                    $docElement->enum = [0,1]; // [true,false]
-                } else {
-                    $docElement->enum = [0,1,null]; // [true,false,null]
-                }
-
-            }
-
-            foreach ($constraints as $constraint) {
-
-                if ($constraint instanceof Constraints\NotBlank) {
-                    continue;
-                }
-
-                if ($constraint instanceof Constraints\Length) {
-                    if ($constraint->min !== null) {
-                        $docElement->minLength = $constraint->min;
-                    }
-
-                    if ($constraint->max !== null) {
-                        $docElement->maxLength = $constraint->max;
-                    }
-
-                } elseif ($constraint instanceof Constraints\GreaterThan) {
-                    $docElement->exclusiveMinimum = true;
-                    $docElement->minimum = $constraint->value;
-                } elseif ($constraint instanceof Constraints\GreaterThanOrEqual) {
-                    $docElement->minimum = $constraint->value;
-                } elseif ($constraint instanceof Constraints\LessThan) {
-                    $docElement->exclusiveMaximum = true;
-                    $docElement->maximum = $constraint->value;
-                } elseif ($constraint instanceof Constraints\LessThanOrEqual) {
-                    $docElement->maximum = $constraint->value;
-                } elseif ($constraint instanceof Constraints\Choice) {
-                    $docElement->enum = \array_values($constraint->choices);
-                }
-            }
-
-            // changing enum to min/max if enum is big
-            if (\is_array($docElement->enum) && \count($docElement->enum)) {
-                $enumCollection = new ArrayCollection($docElement->enum);
+            // changing element choices to min/max if enum is big and values are integers
+            if (\is_array($docElement->choices) && \count($docElement->choices)) {
+                $enumCollection = new ArrayCollection($docElement->choices);
                 $first = $enumCollection->first();
                 $last = $enumCollection->last();
                 if (\is_int($first) && \is_int($last) && ($first < $last)) {
-                    $docElement->enum = null;
+                    $docElement->choices = null;
                     $docElement->minimum = $first;
                     $docElement->exclusiveMinimum = false;
                     $docElement->maximum = $last;
@@ -194,7 +185,7 @@ class FormDocCollector
 
                 $docElement->type = FormElementDoc::TYPE_COLLECTION;
                 $elementCollectionEntryType = $element->getConfig()->getOption('entry_type');
-                $docElement->collectionElementsType = $elementCollectionEntryType;
+                $docElement->collectionItemsClass = $elementCollectionEntryType;
 
                 //} elseif (\class_exists($elementInnerTypeClass) && Classes::isImplements($elementInnerTypeClass, FormTypeInterface::class)) {
             } elseif (\class_exists($elementInnerTypeClass) && (
@@ -206,7 +197,7 @@ class FormDocCollector
                 // to provide correct naming of wrapped data
                 $docElement->type = FormElementDoc::TYPE_FORM;
                 $innerTypeClassReflection = new \ReflectionClass($elementInnerTypeClass);
-                $docElement->swaggerReferencesToClass = $innerTypeClassReflection->isAnonymous() ? $formClass : $elementInnerTypeClass;
+                $docElement->fieldReferencesToFormClass = $innerTypeClassReflection->isAnonymous() ? $formClass : $elementInnerTypeClass;
 
             } else {
                 $docElement->type = FormElementDoc::TYPE_SCALAR;

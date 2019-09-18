@@ -11,7 +11,7 @@ class World extends DocumentedFormAction
 {
     
     /**
-     * @Route("", methods={"POST"})
+     * @Route("/hello/world", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function __invoke(): Response

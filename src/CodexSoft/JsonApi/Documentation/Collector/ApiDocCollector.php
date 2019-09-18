@@ -7,6 +7,7 @@ use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\JsonApiSchema;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Router;
 
 class ApiDocCollector
@@ -43,22 +44,14 @@ class ApiDocCollector
         $pathPrefixToRemove = '';
         $docApi->actions = $this->collectActions($pathPrefixToRemove);
 
-        //$formsClassMap = $this->formsClassesMap ?: $this->getDefaultFormsClassMap();
-        //$formsClassMap = [
-        //    $this->jsonApiSchema->
-        //];
         foreach ($paths as $path => $namespace) {
             /** @noinspection SlowArrayOperationsInLoopInspection */
             $docApi->forms = \array_merge($docApi->forms, $this->collectForms($path, $namespace));
-            //\array_push($docApi->forms, ...$this->collectForms($path, $namespace));
         }
 
-        //$responsesClassMap = $this->responsesClassesMap ?: $this->getDefaultResponsesClassMap();
-        //foreach ($responsesClassMap as $path => $namespace) {
         foreach ($paths as $path => $namespace) {
             /** @noinspection SlowArrayOperationsInLoopInspection */
             $docApi->responses = \array_merge($docApi->responses, $this->collectResponses($path, $namespace));
-            //\array_push($docApi->responses, ...$this->collectResponses($path, $namespace));
         }
 
         return $docApi;
@@ -103,6 +96,11 @@ class ApiDocCollector
         $forms = [];
         $formClasses = $this->findClassesInPath($formsDir, $formsNamespace);
         foreach ($formClasses as $formClass) {
+
+            //if (\is_subclass_of($formClass, Response::class)) {
+            //    continue;
+            //}
+
             try {
                 $formDoc = (new FormDocCollector($this->formFactory, $this->logger))->collect($formClass);
             } catch (\Throwable $e) {

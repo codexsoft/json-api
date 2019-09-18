@@ -8,6 +8,9 @@ use CodexSoft\JsonApi\Form\AbstractForm;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenInterface;
 use Psr\Log\LoggerInterface;
 
+/**
+ * @deprecated SwaggerGenerator is used now
+ */
 class SwagenForm
 {
 

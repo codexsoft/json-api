@@ -15,6 +15,7 @@ use Symfony\Component\Form\Extension\Core\Type;
 /**
  * Class SwagenLib
  * Generate swagger documentation from forms
+ * @deprecated SwaggerGenerator is used now
  */
 class SwagenLib
 {

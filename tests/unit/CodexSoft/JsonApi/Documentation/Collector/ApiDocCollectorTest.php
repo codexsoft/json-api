@@ -16,7 +16,7 @@ class ApiDocCollectorTest extends TestCase
 
     public function testCollect()
     {
-        $kernel = new AbstractWebServer('dev', false);
+        $kernel = new AbstractWebServer('dev', true);
         $kernel->boot();
 
         $container = $kernel->getContainer();
