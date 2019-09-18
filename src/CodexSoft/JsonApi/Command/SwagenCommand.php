@@ -3,10 +3,7 @@
 namespace CodexSoft\JsonApi\Command;
 
 use CodexSoft\JsonApi\Documentation\Collector\ApiDocCollector;
-use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenGenerateApiDocumentation;
-use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenLib;
 use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwaggerGenerator;
-use CodexSoft\JsonApi\JsonApiSchema;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
@@ -15,7 +12,6 @@ use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Filesystem\Filesystem;
-use function CodexSoft\Code\str;
 
 class SwagenCommand extends Command
 {
@@ -24,7 +20,6 @@ class SwagenCommand extends Command
     {
         $this
             // the name of the command (the part after "bin/console")
-            //->setName('app:swagen')
             ->setName('api:swagger')
 
             // the short description shown while running "php bin/console list"
@@ -35,7 +30,7 @@ class SwagenCommand extends Command
             ->setHelp('This command allows you to automatically generate swagger documentation from symfony forms')
             ->addArgument('paths',InputArgument::IS_ARRAY,'destination file path (MUST be PSR4 roots!)')
             ->addOption('destinationFile','d',InputArgument::OPTIONAL,'destination file path')
-            ->addOption('strict','s',InputOption::VALUE_NONE,'if set, any exceptions will stop generation process')
+            //->addOption('strict','s',InputOption::VALUE_NONE,'if set, any exceptions will stop generation process')
         ;
     }
 
@@ -61,8 +56,6 @@ class SwagenCommand extends Command
             throw new \RuntimeException('Failed to get container!');
         }
 
-        //$rootDir = $app->getKernel()->getProjectDir();
-
         /** @var \Symfony\Component\Form\FormFactory $formFactory */
         $formFactory = $container->get('form.factory');
 
@@ -71,15 +64,6 @@ class SwagenCommand extends Command
 
         $logger = new ConsoleLogger($output);
 
-        //$jsonApiSchema = (new JsonApiSchema)
-        //    ->setNamespaceBase('TestApi')
-        //    ->setPathToPsrRoot($kernel->getProjectDir().'/tests/unit');
-
-        //$paths = [
-        //    $kernel->getProjectDir().'/src' => '',
-            //__DIR__.'/../' => '',
-            //$kernel->getProjectDir().'/tests/unit' => '',
-        //];
         $paths = $input->getArgument('paths') ?: [];
         \array_walk($paths, function(&$val) {
             $val = realpath($val);
@@ -90,7 +74,6 @@ class SwagenCommand extends Command
             $val = is_int($val) ? '' : $val;
         });
         $paths[realpath(dirname(__DIR__))] = 'CodexSoft\\JsonApi';
-        //die(var_export($paths));
 
         $apiDoc = (new ApiDocCollector($router, $formFactory, $logger))->collect($paths);
 
