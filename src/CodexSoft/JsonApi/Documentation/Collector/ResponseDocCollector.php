@@ -55,7 +55,7 @@ class ResponseDocCollector
 
         if ($reflection->isAbstract()) {
             //throw new \Exception("SKIPPING response $responseClass: class is abstract");
-            $logger->notice("SKIPPING response $responseClass: class is abstract");
+            $logger->debug("SKIPPING response $responseClass: class is abstract");
             return null;
         }
 
@@ -66,7 +66,7 @@ class ResponseDocCollector
 
         if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
             //throw new \Exception("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
-            $logger->info("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
+            $logger->debug("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
             return null;
         }
 
