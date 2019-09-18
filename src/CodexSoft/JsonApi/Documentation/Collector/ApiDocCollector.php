@@ -79,6 +79,7 @@ class ApiDocCollector
             }
 
             if ($responseDoc instanceof ResponseDoc) {
+                $this->logger->debug('ADDED response '.$responseClass);
                 $responses[$responseClass] = $responseDoc;
             }
         }
@@ -97,10 +98,6 @@ class ApiDocCollector
         $formClasses = $this->findClassesInPath($formsDir, $formsNamespace);
         foreach ($formClasses as $formClass) {
 
-            //if (\is_subclass_of($formClass, Response::class)) {
-            //    continue;
-            //}
-
             try {
                 $formDoc = (new FormDocCollector($this->formFactory, $this->logger))->collect($formClass);
             } catch (\Throwable $e) {
@@ -109,6 +106,7 @@ class ApiDocCollector
             }
 
             if ($formDoc instanceof FormDoc) {
+                $this->logger->debug('ADDED form '.$formClass);
                 $forms[$formClass] = $formDoc;
             }
         }
@@ -167,7 +165,8 @@ class ApiDocCollector
         foreach ($routes as $routeName => $route) {
             try {
                 $actionDoc = (new ActionDocCollector($this->logger))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
-                if ($actionDoc) {
+                if ($actionDoc instanceof ActionDoc) {
+                    $this->logger->debug('ADDED action '.$route->getPath());
                     $actions[$actionDoc->actionClass] = $actionDoc;
                 }
 

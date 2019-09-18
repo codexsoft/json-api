@@ -73,7 +73,7 @@ class SwagenCommand extends Command
         \array_walk($paths, function(&$val) {
             $val = is_int($val) ? '' : $val;
         });
-        $paths[realpath(dirname(__DIR__))] = 'CodexSoft\\JsonApi';
+        $paths[realpath(dirname(__DIR__))] = 'CodexSoft\\JsonApi\\';
 
         $apiDoc = (new ApiDocCollector($router, $formFactory, $logger))->collect($paths);
 
