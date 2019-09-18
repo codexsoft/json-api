@@ -79,7 +79,7 @@ class ApiDocCollector
             }
 
             if ($responseDoc instanceof ResponseDoc) {
-                $this->logger->debug('ADDED response '.$responseClass);
+                $this->logger->info('ADDED response '.$responseClass);
                 $responses[$responseClass] = $responseDoc;
             }
         }
@@ -106,7 +106,7 @@ class ApiDocCollector
             }
 
             if ($formDoc instanceof FormDoc) {
-                $this->logger->debug('ADDED form '.$formClass);
+                $this->logger->info('ADDED form '.$formClass);
                 $forms[$formClass] = $formDoc;
             }
         }
@@ -166,7 +166,7 @@ class ApiDocCollector
             try {
                 $actionDoc = (new ActionDocCollector($this->logger))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
                 if ($actionDoc instanceof ActionDoc) {
-                    $this->logger->debug('ADDED action '.$route->getPath());
+                    $this->logger->info('ADDED action '.$route->getPath());
                     $actions[$actionDoc->actionClass] = $actionDoc;
                 }
 
