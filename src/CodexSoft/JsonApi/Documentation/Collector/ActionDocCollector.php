@@ -28,7 +28,13 @@ class ActionDocCollector
         $this->logger = $logger;
     }
 
-    public function collect(Route $route): ActionDoc
+    /**
+     * @param Route $route
+     *
+     * @return ActionDoc|null
+     * @throws \Exception
+     */
+    public function collect(Route $route): ?ActionDoc
     {
         $docAction = new ActionDoc;
 
@@ -62,15 +68,15 @@ class ActionDocCollector
         try {
             $actionClassReflection = new \ReflectionClass($actionClass);
         } catch (\ReflectionException $e) {
-            throw new \Exception("SKIPPING action $actionClass: Failed to create ReflectionClass ".$e);
+            throw new \Exception("SKIPPING action $actionClass: Failed to create ReflectionClass ".$e->getMessage());
             //$logger->warning('Failed to create ReflectionClass for '.$actionClass.': '.$e);
             //return null;
         }
 
         if ($actionClassReflection->isAbstract()) {
-            throw new \Exception("SKIPPING action $actionClassReflection: class is abstract");
-            //$logger->notice("SKIPPING action $actionClassReflection: class is abstract");
-            //return null;
+            //throw new \Exception("SKIPPING action $actionClassReflection: class is abstract");
+            $logger->debug("SKIPPING action $actionClassReflection: class is abstract");
+            return null;
         }
 
         if ($actionClassReflection->implementsInterface(SwagenActionDescriptionInterface::class)) {
@@ -79,27 +85,24 @@ class ActionDocCollector
         }
 
         if (!$actionClassReflection->implementsInterface(SwagenInterface::class)) {
-            throw new \Exception("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
-            //$logger->debug("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
-            //return null;
+            //throw new \Exception("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
+            $logger->debug("SKIPPING action $actionClass: it does not implement ".Classes::short(SwagenInterface::class));
+            return null;
         }
 
         $logger->debug($actionClass.' action implements '.Classes::short(SwagenInterface::class));
 
         if (!$actionClassReflection->implementsInterface(SwagenActionInterface::class)) {
-            throw new \Exception("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
-            //$logger->warning("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
-            //return null;
+            //throw new \Exception("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
+            $logger->debug("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
+            return null;
         }
 
-        $logger->debug($actionClass.' action implements '.Classes::short(SwagenActionInterface::class));
+        //$logger->debug($actionClass.' action implements '.Classes::short(SwagenActionInterface::class));
 
         $docAction->actionClass = $actionClass;
 
-        //$actionNamespace = $lib->getActionDefaultNamespace();
-        //$actionClassWithoutPrefix = (string) str($actionClass)->removeLeft($actionNamespace);
         $docAction->tags = [
-            //(string) str($actionClassWithoutPrefix)
             (string) str($actionClass)
                 ->removeRight(Classes::short($actionClass))
                 ->replace('\\', '-')

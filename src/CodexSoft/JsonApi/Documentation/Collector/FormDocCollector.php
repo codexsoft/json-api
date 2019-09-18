@@ -38,38 +38,32 @@ class FormDocCollector
     /**
      * @param string $formClass
      *
-     * @return FormDoc
+     * @return FormDoc|null
      * @throws \ReflectionException
      */
-    public function collect(string $formClass): FormDoc
+    public function collect(string $formClass): ?FormDoc
     {
         $docForm = new FormDoc;
         $docForm->class = $formClass;
 
-        //$formFactory = $this->lib->getFormFactory();
         $formFactory = $this->formFactory;
 
         try {
             $formClassReflection = new \ReflectionClass($formClass);
         } catch (\ReflectionException $e) {
-            throw new \Exception("SKIPPING $formClass form Failed to create ReflectionClass: ".$e);
-            //$this->getLogger()->notice('Failed to create ReflectionClass for '.$formClass.': '.$e);
-            //return null;
+            throw new \Exception("SKIPPING $formClass form Failed to create ReflectionClass: ".$e->getMessage());
         }
 
         if ($formClassReflection->isAbstract()) {
-            throw new \Exception("SKIPPING form $formClass: class is abstract");
-            //$this->getLogger()->notice("$formClass form SKIPPING: class is abstract");
-            //return null;
+            //throw new \Exception("SKIPPING form $formClass: class is abstract");
+            $this->getLogger()->debug("SKIPPING form $formClass: class is abstract");
+            return null;
         }
 
-        //if (!$formClassReflection->implementsInterface(FormTypeInterface::class)) {
-        //    throw new \Exception("SKIPPING form $formClass: class does not implement ".FormTypeInterface::class);
-        //}
-
-        //if (!$formClassReflection->isSubclassOf(AbstractForm::class) && !$formClassReflection->isSubclassOf(Response::class)) {
         if (!$formClassReflection->isSubclassOf(AbstractForm::class) && !$formClassReflection->isSubclassOf(Response::class)) {
-            throw new \Exception("SKIPPING form $formClass: class does not implement ".AbstractForm::class);
+            //throw new \Exception("SKIPPING form $formClass: class does not implement ".AbstractForm::class);
+            $this->logger->debug("SKIPPING form $formClass: class does not implement ".AbstractForm::class);
+            return null;
         }
 
         $formBuilder = $formFactory->create($formClass);
@@ -121,43 +115,6 @@ class FormDocCollector
             $docElement->isNotBlank = false;
             $docElement->isNotNull = false;
 
-
-            //foreach($constraints as $constraint) {
-                // // todo: if field has default value, ignore NotBlank and avoid to set field as required?
-                //if ($constraint instanceof Constraints\NotBlank) {
-                //    $docElement->isRequired = true;
-                //    $docElement->isNotBlank = true;
-                //    $docForm->requiredFields[] = $name;
-                //    break;
-                //}
-                //
-                //if ($constraint instanceof Constraints\NotNull) {
-                //    $docElement->isRequired = true;
-                //    $docElement->isNotNull = true;
-                //    $docForm->requiredFields[] = $name;
-                //    break;
-                //}
-            //
-            //}
-
-            //if ($elementInnerTypeClass === BooleanType::class) {
-            //
-            //    $fieldIsNotNull = false;
-            //    foreach($constraints as $constraint) {
-            //        if ($constraint instanceof Constraints\NotNull) {
-            //            $fieldIsNotNull = true;
-            //            break;
-            //        }
-            //    }
-            //
-            //    if ($fieldIsNotNull) {
-            //        $docElement->choices = [0,1]; // [true,false]
-            //    } else {
-            //        $docElement->choices = [0,1,null]; // [true,false,null]
-            //    }
-            //
-            //}
-
             $constraints = $passedOptions['constraints'] ?? [];
             $docElement->constraints = $constraints;
             $docElement->analyzeConstraints();
@@ -187,7 +144,6 @@ class FormDocCollector
                 $elementCollectionEntryType = $element->getConfig()->getOption('entry_type');
                 $docElement->collectionItemsClass = $elementCollectionEntryType;
 
-                //} elseif (\class_exists($elementInnerTypeClass) && Classes::isImplements($elementInnerTypeClass, FormTypeInterface::class)) {
             } elseif (\class_exists($elementInnerTypeClass) && (
                     \is_subclass_of($elementInnerTypeClass,AbstractForm::class) ||
                     (\is_subclass_of($elementInnerTypeClass,AbstractBaseResponse::class) && Classes::isImplements($elementInnerTypeClass,SwagenResponseInterface::class))

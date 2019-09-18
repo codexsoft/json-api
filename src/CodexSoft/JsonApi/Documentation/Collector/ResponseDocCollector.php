@@ -30,10 +30,10 @@ class ResponseDocCollector
     /**
      * @param string $responseClass
      *
-     * @return ResponseDoc
+     * @return ResponseDoc|null
      * @throws \ReflectionException
      */
-    public function collect(string $responseClass): ResponseDoc
+    public function collect(string $responseClass): ?ResponseDoc
     {
         $responseDoc = new ResponseDoc;
         $responseDoc->class = $responseClass;
@@ -54,24 +54,24 @@ class ResponseDocCollector
         }
 
         if ($reflection->isAbstract()) {
-            throw new \Exception("SKIPPING response $responseClass: class is abstract");
-            //$logger->notice("$responseClass response SKIPPING: class is abstract");
-            //return null;
+            //throw new \Exception("SKIPPING response $responseClass: class is abstract");
+            $logger->notice("SKIPPING response $responseClass: class is abstract");
+            return null;
         }
 
         if (!$reflection->isSubclassOf(AbstractBaseResponse::class)) {
-            throw new \Exception("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
-            //$logger->info("$responseClass response SKIPPING: class is not ancestor of ".AbstractBaseResponse::class);
-            //return null;
+            //throw new \Exception("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
+            $logger->info("SKIPPING response $responseClass: class is not ancestor of ".AbstractBaseResponse::class);
+            return null;
         }
 
         /**
          * skip generating definitions if class does not implement auto-generating interface
          */
         if (!$reflection->implementsInterface(SwagenResponseInterface::class)) {
-            throw new \Exception("SKIPPING response $responseClass : class does not implement ".SwagenResponseInterface::class);
-            //$logger->info("$responseClass response SKIPPING: class does not implement ".SwagenResponseInterface::class);
-            //return null;
+            //throw new \Exception("SKIPPING response $responseClass : class does not implement ".SwagenResponseInterface::class);
+            $logger->info("SKIPPING response $responseClass : class does not implement ".SwagenResponseInterface::class);
+            return null;
         }
 
         $logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));

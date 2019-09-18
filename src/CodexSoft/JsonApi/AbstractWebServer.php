@@ -68,9 +68,8 @@ class AbstractWebServer extends BaseKernel
         ]);
 
         $confDir = $this->getConfigDir();
-
-        //$loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
-        //$loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
+        $loader->load($confDir.'/{packages}/*'.self::CONFIG_EXTS, 'glob');
+        $loader->load($confDir.'/{packages}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, 'glob');
         $loader->load($confDir.'/{services}'.self::CONFIG_EXTS, 'glob');
         $loader->load($confDir.'/{services}_'.$this->environment.self::CONFIG_EXTS, 'glob');
     }
@@ -82,21 +81,13 @@ class AbstractWebServer extends BaseKernel
      */
     protected function configureRoutes(RouteCollectionBuilder $routes)
     {
-        //$routes->import($this->getProjectDir().'/src/App/Action/', '/', 'annotation');
         $routes->import($this->getProjectDir().'/src/', '/', 'annotation');
         $routes->import($this->getProjectDir().'/tests/unit/', '/', 'annotation');
 
-        //$routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
-        //$routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');
-        //$routes->import($confDir.'/{routes}'.self::CONFIG_EXTS, '/', 'glob');
-        $routes->add('/random/{limit}', 'kernel:randomNumber');
-    }
-
-    public function randomNumber($limit)
-    {
-        return new JsonResponse(array(
-            'number' => rand(0, $limit)
-        ));
+        $confDir = $this->getConfigDir();
+        $routes->import($confDir.'/{routes}/*'.self::CONFIG_EXTS, '/', 'glob');
+        $routes->import($confDir.'/{routes}/'.$this->environment.'/**/*'.self::CONFIG_EXTS, '/', 'glob');
+        $routes->import($confDir.'/{routes}'.self::CONFIG_EXTS, '/', 'glob');
     }
 
 }

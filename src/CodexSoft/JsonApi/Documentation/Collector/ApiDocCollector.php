@@ -74,11 +74,11 @@ class ApiDocCollector
             try {
                 $responseDoc = (new ResponseDocCollector($this->formFactory, $this->logger))->collect($responseClass);
             } catch (\Throwable $e) {
-                $this->logger->notice((string) $e);
+                $this->logger->notice($e->getMessage());
                 continue;
             }
 
-            if ($responseDoc) {
+            if ($responseDoc instanceof ResponseDoc) {
                 $responses[$responseClass] = $responseDoc;
             }
         }
@@ -104,7 +104,7 @@ class ApiDocCollector
             try {
                 $formDoc = (new FormDocCollector($this->formFactory, $this->logger))->collect($formClass);
             } catch (\Throwable $e) {
-                $this->logger->notice((string) $e);
+                $this->logger->notice($e->getMessage());
                 continue;
             }
 
