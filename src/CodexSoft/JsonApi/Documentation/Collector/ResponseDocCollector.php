@@ -42,7 +42,9 @@ class ResponseDocCollector
 
         if (!\class_exists($responseClass)) {
             //return null;
-            throw new \Exception("SKIPPING response $responseClass: class is not exists");
+            //throw new \Exception("SKIPPING response $responseClass: class is not exists");
+            $logger->debug("SKIPPING response $responseClass: class is not exists");
+            return null;
         }
 
         try {
@@ -61,6 +63,11 @@ class ResponseDocCollector
 
         if ($reflection->isInterface()) {
             $this->logger->debug("SKIPPING response $responseClass: is interface");
+            return null;
+        }
+
+        if ($reflection->isTrait()) {
+            $this->logger->debug("SKIPPING response $responseClass: is trait");
             return null;
         }
 

@@ -48,6 +48,13 @@ class FormDocCollector
 
         $formFactory = $this->formFactory;
 
+        if (!\class_exists($formClass)) {
+            //return null;
+            //throw new \Exception("SKIPPING response $responseClass: class is not exists");
+            $this->logger->debug("SKIPPING form $formClass: class is not exists");
+            return null;
+        }
+
         try {
             $formClassReflection = new \ReflectionClass($formClass);
         } catch (\ReflectionException $e) {
@@ -62,6 +69,11 @@ class FormDocCollector
 
         if ($formClassReflection->isInterface()) {
             $this->logger->debug("SKIPPING form $formClass: is interface");
+            return null;
+        }
+
+        if ($formClassReflection->isTrait()) {
+            $this->logger->debug("SKIPPING form $formClass: is trait");
             return null;
         }
 

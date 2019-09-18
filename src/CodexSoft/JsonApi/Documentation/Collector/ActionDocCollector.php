@@ -65,6 +65,13 @@ class ActionDocCollector
             $actionClass = (string) str($defaultController)->removeRight('::__invoke');
         }
 
+        if (!\class_exists($actionClass)) {
+            //return null;
+            //throw new \Exception("SKIPPING response $responseClass: class is not exists");
+            $this->logger->debug("SKIPPING action $actionClass: class is not exists");
+            return null;
+        }
+
         try {
             $actionClassReflection = new \ReflectionClass($actionClass);
         } catch (\ReflectionException $e) {
@@ -75,6 +82,11 @@ class ActionDocCollector
 
         if ($actionClassReflection->isInterface()) {
             $logger->debug("SKIPPING action $actionClassReflection: is interface");
+            return null;
+        }
+
+        if ($actionClassReflection->isTrait()) {
+            $this->logger->debug("SKIPPING action $actionClassReflection: is trait");
             return null;
         }
 
