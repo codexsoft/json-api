@@ -24,6 +24,8 @@ $defaultDefinition = (new Definition)
 $classes = [
     \CodexSoft\JsonApi\Form\Extensions\FormFieldDefaultValueExtension::class,
     \CodexSoft\JsonApi\Form\Extensions\FormFieldExampleExtension::class,
+    \CodexSoft\JsonApi\Command\CreateActionCommand::class,
+    \CodexSoft\JsonApi\Command\SwagenCommand::class,
 ];
 
 foreach ($classes as $class) {

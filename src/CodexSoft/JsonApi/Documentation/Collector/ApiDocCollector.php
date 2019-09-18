@@ -4,10 +4,10 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 
 use CodexSoft\Code\Helpers\Files;
 use CodexSoft\Code\Traits\Loggable;
-use CodexSoft\JsonApi\JsonApiSchema;
+//use CodexSoft\JsonApi\JsonApiSchema;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
-use Symfony\Component\HttpFoundation\Response;
+//use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Router;
 
 class ApiDocCollector
@@ -15,8 +15,8 @@ class ApiDocCollector
 
     use Loggable;
 
-    /** @var JsonApiSchema */
-    private $jsonApiSchema;
+    ///** @var JsonApiSchema */
+    //private $jsonApiSchema;
 
     /** @var Router */
     private $router;
@@ -24,11 +24,11 @@ class ApiDocCollector
     /** @var FormFactory */
     private $formFactory;
 
-    public function __construct(Router $router, FormFactory $formFactory, JsonApiSchema $jsonApiSchema, LoggerInterface $logger = null)
+    public function __construct(Router $router, FormFactory $formFactory, LoggerInterface $logger = null)
     {
         $this->logger = $logger;
         $this->router = $router;
-        $this->jsonApiSchema = $jsonApiSchema;
+        //$this->jsonApiSchema = $jsonApiSchema;
         $this->formFactory = $formFactory;
     }
 
@@ -156,7 +156,6 @@ class ApiDocCollector
      * @param null|string $pathPrefixToRemove
      *
      * @return ActionDoc[]
-     * @throws \Throwable
      */
     protected function collectActions(?string $pathPrefixToRemove = null): array
     {
@@ -173,7 +172,7 @@ class ApiDocCollector
                 }
 
             } catch (\Throwable $e) {
-                $this->getLogger()->error('FAILED to collect documentation for '.$routeName.': '.$e->getMessage().', SKIPPED');
+                $this->getLogger()->notice('FAILED to collect documentation for '.$routeName.': '.$e->getMessage().', SKIPPED');
             }
 
         }

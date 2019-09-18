@@ -27,9 +27,9 @@ class ApiDocCollectorTest extends TestCase
         /** @var Router $router */
         $router = $container->get('router');
 
-        $jsonApiSchema = (new JsonApiSchema)
-            ->setNamespaceBase('TestApi')
-            ->setPathToPsrRoot($kernel->getProjectDir().'/tests/unit');
+        //$jsonApiSchema = (new JsonApiSchema)
+        //    ->setNamespaceBase('TestApi')
+        //    ->setPathToPsrRoot($kernel->getProjectDir().'/tests/unit');
 
         $paths = [
             $kernel->getProjectDir().'/src' => '',
@@ -38,7 +38,7 @@ class ApiDocCollectorTest extends TestCase
 
         $logger = new Logger('main', [new StreamHandler('php://stderr')]);
 
-        $apiDoc = (new ApiDocCollector($router, $formFactory, $jsonApiSchema, $logger))->collect($paths);
+        $apiDoc = (new ApiDocCollector($router, $formFactory, $logger))->collect($paths);
         $x=1;
     }
 }
