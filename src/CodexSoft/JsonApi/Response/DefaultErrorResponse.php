@@ -39,7 +39,7 @@ class DefaultErrorResponse extends AbstractBaseResponse
             'data' => $this->extraData,
         ];
 
-        parent::__construct($data);
+        parent::__construct($data, $statusCode);
     }
 
     final public static function getErrorMessageByStatusCode(int $statusCode): string
