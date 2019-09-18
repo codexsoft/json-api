@@ -86,7 +86,7 @@ class ResponseDocCollector
             return null;
         }
 
-        $logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));
+        //$logger->info($responseClass.' response implements '.Classes::short(SwagenResponseInterface::class));
 
         /** @var SwagenResponseInterface $responseClass */
         $responseDoc->description = $responseClass::getSwaggerResponseDescription();

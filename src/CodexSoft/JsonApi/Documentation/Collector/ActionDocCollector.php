@@ -107,7 +107,7 @@ class ActionDocCollector
             return null;
         }
 
-        $logger->debug($actionClass.' action implements '.Classes::short(SwagenInterface::class));
+        //$logger->debug($actionClass.' action implements '.Classes::short(SwagenInterface::class));
 
         if (!$actionClassReflection->implementsInterface(SwagenActionInterface::class)) {
             //throw new \Exception("SKIPPING action $actionClass does not implement ".SwagenActionInterface::class);
