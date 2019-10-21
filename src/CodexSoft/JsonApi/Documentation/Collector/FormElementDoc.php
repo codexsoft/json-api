@@ -53,9 +53,9 @@ class FormElementDoc
 
     // options
 
-    public $example;
-    public $label;
-    public $defaultValue;
+    public $example = self::VALUE_UNDEFINED;
+    public $label = self::VALUE_UNDEFINED;
+    public $defaultValue = self::VALUE_UNDEFINED;
 
     /** @var string  */
     public $collectionItemsClass; // can be scalar or form
