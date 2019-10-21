@@ -188,7 +188,8 @@ class SwaggerGenerator
 
     protected function referenceToDefinition(\ReflectionClass $reflectionClass): string
     {
-        return '#/definitions/'.$this->formTitle($reflectionClass);
+        //return '#/definitions/'.$this->formTitle($reflectionClass);
+        return '#/definitions/'.$this->formTitle($reflectionClass->getName());
     }
 
     protected function typeClassToSwaggerType($class): ?string
