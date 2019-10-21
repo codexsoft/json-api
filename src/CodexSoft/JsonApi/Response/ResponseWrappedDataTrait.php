@@ -7,7 +7,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 trait ResponseWrappedDataTrait
 {
-    private static $generatingWrappedDataForResponseDefinition = false;
+    public static $generatingWrappedDataForResponseDefinition = false;
 
     /**
      * @param bool $generatingWrappedDataForResponseDefinition
@@ -25,7 +25,7 @@ trait ResponseWrappedDataTrait
         return self::$generatingWrappedDataForResponseDefinition;
     }
 
-    protected function wrapData($data): array
+    public function wrapData($data): array
     {
         // auto-wrap data if on
         if ($this->getDataWrapper()) {
@@ -36,7 +36,7 @@ trait ResponseWrappedDataTrait
         return $data;
     }
 
-    protected function wrapDefinition(FormBuilderInterface $builder)
+    public function wrapDefinition(FormBuilderInterface $builder)
     {
         if ($this->getDataWrapper()) {
             $reflection = new \ReflectionClass($this);
@@ -68,12 +68,12 @@ trait ResponseWrappedDataTrait
      * Override and return something like 'data' in order to auto-wrap response data into key 'data'
      * @return null|string
      */
-    protected function getDataWrapper(): ?string
+    public function getDataWrapper(): ?string
     {
         return null;
     }
 
-    protected function getDataWrapperOptions(): array
+    public function getDataWrapperOptions(): array
     {
         return [
             'label' => 'Возвращенные данные',
