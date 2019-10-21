@@ -3,17 +3,10 @@
 namespace CodexSoft\JsonApi\Command;
 
 use CodexSoft\JsonApi\JsonApiTools;
-use CodexSoft\JsonApi\Operations\CreateActionOperation;
-use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenGenerateApiDocumentation;
-use CodexSoft\JsonApi\Documentation\SwaggerGenerator\SwagenLib;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Logger\ConsoleLogger;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\DependencyInjection\ContainerInterface;
-use function CodexSoft\Code\str;
 
 class CreateActionCommand extends Command
 {

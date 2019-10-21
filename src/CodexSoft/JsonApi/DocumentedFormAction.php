@@ -7,7 +7,7 @@ use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionExternalFormInterface;
-use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionProducesErrorCodesInterface;
+//use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionProducesErrorCodesInterface;
 use CodexSoft\JsonApi\Form\SymfonyFormExampleGenerator;
 use Symfony\Component\HttpFoundation\Response;
 use function CodexSoft\Code\str;
@@ -21,7 +21,8 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * Class DocumentedFormAction
  */
-abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface, SwagenActionProducesErrorCodesInterface
+//abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface, SwagenActionProducesErrorCodesInterface
+abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface
 {
 
     public static function producesHttpErrorStatusCodes()
@@ -31,36 +32,36 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
         ];
     }
 
-    /**
-     * Коды ошибок, которые возвращаются в этом экшне
-     *
-     * @return array
-     */
-    public static function producesErrorCodes(): array
-    {
-        return \array_merge(static::getDefaultErrorCodes(), static::getSpecieficErrorCodes());
-    }
-
-    /**
-     * @return array дополнительные коды ошибок, которые могут возникнуть в этом экшне
-     */
-    public static function getSpecieficErrorCodes(): array
-    {
-        return [];
-    }
-
-    /**
-     * @return array стандартные коды ошибок, которые могут возникнуть в любом DocumentedFormAction
-     *     экшне
-     */
-    public static function getDefaultErrorCodes()
-    {
-        return [
-            ErrorResponse::ERROR_CODE_UNKNOWN,
-            ErrorResponse::ERROR_CODE_FORM_NOT_SUBMITTED,
-            ErrorResponse::ERROR_CODE_FORM_PARAMS_ERROR,
-        ];
-    }
+    ///**
+    // * Коды ошибок, которые возвращаются в этом экшне
+    // *
+    // * @return array
+    // */
+    //public static function producesErrorCodes(): array
+    //{
+    //    return \array_merge(static::getDefaultErrorCodes(), static::getSpecieficErrorCodes());
+    //}
+    //
+    ///**
+    // * @return array дополнительные коды ошибок, которые могут возникнуть в этом экшне
+    // */
+    //public static function getSpecieficErrorCodes(): array
+    //{
+    //    return [];
+    //}
+    //
+    ///**
+    // * @return array стандартные коды ошибок, которые могут возникнуть в любом DocumentedFormAction
+    // *     экшне
+    // */
+    //public static function getDefaultErrorCodes()
+    //{
+    //    return [
+    //        ErrorResponse::ERROR_CODE_UNKNOWN,
+    //        ErrorResponse::ERROR_CODE_FORM_NOT_SUBMITTED,
+    //        ErrorResponse::ERROR_CODE_FORM_PARAMS_ERROR,
+    //    ];
+    //}
 
     protected static function responseClass()
     {
