@@ -99,8 +99,12 @@ class CreateActionOperation extends Operation
             $this->fqnActionClass = $baseActionsNamespace.$actionClass;
         }
 
-        $this->fqnActionFormClass = $this->fqnActionClass.'Form';
-        $this->fqnActionResponseClass = $this->fqnActionClass.'Response';
+        //$this->fqnActionFormClass = $this->fqnActionClass.'Form';
+        //$this->fqnActionResponseClass = $this->fqnActionClass.'Response';
+
+        $this->fqnActionFormClass = $this->fqnActionClass.'RequestForm';
+        $this->fqnActionResponseClass = $this->fqnActionClass.'ResponseForm';
+
         $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
         $this->actionNamespace = Classes::getNamespace($this->fqnActionClass);
 

@@ -65,12 +65,13 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
 
     protected static function responseClass()
     {
-        return str(static::class)->removeRight('Action').'Response';
+        return str(static::class)->removeRight('Action').'ResponseForm';
     }
 
     protected static function formClass()
     {
-        return static::class.'Form';
+        return str(static::class)->removeRight('Action').'RequestForm';
+        //return static::class.'Form';
     }
 
     public static function getFormClass(): string
