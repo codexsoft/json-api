@@ -7,6 +7,8 @@ use Symfony\Component\Validator\Constraints;
 
 class FormElementDoc
 {
+    public const VALUE_UNDEFINED = 'VALUE-UNDEFINED-e81b8bc7-d134-4818-b435-1ke92c067261';
+
     public const TYPE_COLLECTION = 1;
     public const TYPE_FORM = 2;
     public const TYPE_SCALAR = 3;
@@ -73,6 +75,11 @@ class FormElementDoc
     public function isForm(): bool
     {
         return $this->type === self::TYPE_FORM;
+    }
+
+    public function isValueDefined($value)
+    {
+        return $value !== self::VALUE_UNDEFINED;
     }
 
     ///**

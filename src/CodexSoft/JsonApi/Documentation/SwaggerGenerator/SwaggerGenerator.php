@@ -127,6 +127,10 @@ class SwaggerGenerator
                         continue;
                     }
 
+                    if (!$item->isValueDefined($value)) {
+                        continue;
+                    }
+
                     $preparedValue = $value;
                     if ($value === null) {
                         $preparedValue = 'null';

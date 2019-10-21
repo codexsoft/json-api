@@ -149,12 +149,12 @@ class FormExampleGenerator
             return $element->example;
         }
 
-        $max = $element->maximum ?? $this->getDefaultMaxInteger();
+        $max = $element->isValueDefined($element->maximum) ? $element->maximum : $this->getDefaultMaxInteger();
         if ($element->exclusiveMaximum) {
             $max--;
         }
 
-        $min = $element->minimum ?? 0;
+        $min = $element->isValueDefined($element->minimum) ? $element->minimum : 0;
         if ($element->exclusiveMinimum) {
             $min++;
         }
