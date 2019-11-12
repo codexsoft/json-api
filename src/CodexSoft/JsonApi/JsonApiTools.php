@@ -14,16 +14,16 @@ class JsonApiTools
     /** @var JsonApiSchema */
     private $config;
 
-    public function __construct()
-    {
-        $this->operationsProcessor = new OperationsProcessor;
-    }
+    //public function __construct()
+    //{
+    //    $this->operationsProcessor = new OperationsProcessor;
+    //}
 
     public function generateAction(): CreateActionOperation
     {
         $operation = (new CreateActionOperation)
-            ->setJsonApiSchema($this->config)
-            ->setOperationsProcessor($this->operationsProcessor);
+            ->setJsonApiSchema($this->config);
+            //->setOperationsProcessor($this->operationsProcessor);
         return $operation;
     }
 
