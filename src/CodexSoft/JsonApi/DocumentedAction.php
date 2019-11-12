@@ -15,13 +15,25 @@ use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionInterface;
 abstract class DocumentedAction extends AbstractAction implements SwagenActionInterface, SwagenActionDescriptionInterface, SwagenActionTagsInterface
 {
 
+    /** @var string ендпойнт никак не обрабатывает входные данные */
     public const STATE_INPUT_NOT_IMPLEMENTED = 'Not implemented';
+
+    /** @var string ендпойнт проверяет входные данные на формальное соответствие задокументированным входным данным */
     public const STATE_INPUT_FORMAL_CHECK = 'Automated formal checking';
+
+    /** @var string ендпойнт корректно обрабатывает входные данные */
     public const STATE_INPUT_IMPLEMENTED = 'Implemented';
 
+    /** @var string ендпойнт не реализован и не выдает задокументированный ответ */
     public const STATE_OUTPUT_NOT_IMPLEMENTED = 'Not implemented';
+
+    /** @var string ендпойнт выдает формально валидный, генерируемый автоматически ответ */
     public const STATE_OUTPUT_AUTOMATED_STUB = 'Automated stub';
+
+    /** @var string ендпойнт выдает формально валидный, заданный вручную ответ (всегда один и тот же) */
     public const STATE_OUTPUT_MANUAL_STUB = 'Manual stub';
+
+    /** @var string ендпойнт реализован */
     public const STATE_OUTPUT_IMPLEMENTED = 'Implemented';
 
     public const TAG_UNCATEGORIZED = 'Uncategorized';
@@ -30,11 +42,15 @@ abstract class DocumentedAction extends AbstractAction implements SwagenActionIn
     protected static $outputStatus = self::STATE_OUTPUT_NOT_IMPLEMENTED;
     protected static $swagenDescription = '';
 
-    protected static function status(): string
-    {
-        return static::describeDevState(static::$inputStatus, static::$outputStatus);
-    }
-
+    /**
+     * Для разработчиков, которые будут работать с документацией к API, важно понимать статус
+     * завершенности роута (можно ли им пользоваться, выдает ли он формально валидные данные).
+     *
+     * @param $inputState
+     * @param $outputState
+     *
+     * @return string
+     */
     protected static function describeDevState($inputState, $outputState)
     {
         return '<br>Development status | INPUT — '.$inputState.' | OUTPUT — '.$outputState;
@@ -42,7 +58,7 @@ abstract class DocumentedAction extends AbstractAction implements SwagenActionIn
 
     public static function descriptionForSwagger(): ?string
     {
-        return static::$swagenDescription.self::status();
+        return static::$swagenDescription.static::describeDevState(static::$inputStatus, static::$outputStatus);
     }
 
     /**
@@ -60,18 +76,6 @@ abstract class DocumentedAction extends AbstractAction implements SwagenActionIn
     }
 
     /**
-     * Коды ошибок, которые возвращаются в этом экшне
-     *
-     * @return array
-     */
-    public static function producesErrorCodes(): array
-    {
-        return [
-            ErrorResponse::ERROR_CODE_UNKNOWN,
-        ];
-    }
-
-    /**
      * Теги, которыми помечен экшн
      *
      * @return string[]
@@ -79,16 +83,6 @@ abstract class DocumentedAction extends AbstractAction implements SwagenActionIn
     public static function tagsForSwagger(): array
     {
         return [self::TAG_UNCATEGORIZED];
-    }
-
-    /**
-     * В каком классе лежит список всех кодов ошибок (константы ERROR_CODE_*)
-     *
-     * @return string
-     */
-    final public static function errorCodesClass(): string
-    {
-        return ErrorResponse::class;
     }
 
 }

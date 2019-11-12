@@ -2,15 +2,18 @@
 
 namespace CodexSoft\JsonApi;
 
+use CodexSoft\JsonApi\Documentation\Collector\FormDocCollector;
 use CodexSoft\JsonApi\Form\Extensions\FormFieldDefaultValueExtension;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionExternalFormInterface;
-//use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionProducesErrorCodesInterface;
 use CodexSoft\JsonApi\Form\SymfonyFormExampleGenerator;
+use CodexSoft\JsonApi\Response\FormValidationFailedException;
+use Symfony\Component\Form\FormFactoryInterface;
+use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
-use function CodexSoft\Code\str;
 use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,57 +24,161 @@ use Symfony\Component\HttpFoundation\Request;
  *
  * Class DocumentedFormAction
  */
-//abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface, SwagenActionProducesErrorCodesInterface
 abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface
 {
 
-    public static function producesHttpErrorStatusCodes()
+    /** @var FormFactoryInterface */
+    protected $formFactory;
+
+    /** @var FormInterface */
+    private $validatedForm;
+
+    /** @var string query parameter name, if present, then auto-generated fake response will be sent */
+    protected $fakeRequestQueryParameterName = 'fakeRequest';
+
+    /**
+     * @var array default options to be passed into request form
+     * allow_extra_fields: whether extra (not declared in RequestForm) fields allowed or not
+     */
+    protected $defaultRequestFormOptions = [
+        'allow_extra_fields' => true
+    ];
+
+    public function __construct(RequestStack $requestStack, FormFactoryInterface $formFactory)
     {
-        return [
-            Response::HTTP_INTERNAL_SERVER_ERROR,
-        ];
+        $this->request = $requestStack->getCurrentRequest();
+        $this->formFactory = $formFactory;
     }
 
-    ///**
-    // * Коды ошибок, которые возвращаются в этом экшне
-    // *
-    // * @return array
-    // */
-    //public static function producesErrorCodes(): array
-    //{
-    //    return \array_merge(static::getDefaultErrorCodes(), static::getSpecieficErrorCodes());
-    //}
-    //
-    ///**
-    // * @return array дополнительные коды ошибок, которые могут возникнуть в этом экшне
-    // */
-    //public static function getSpecieficErrorCodes(): array
-    //{
-    //    return [];
-    //}
-    //
-    ///**
-    // * @return array стандартные коды ошибок, которые могут возникнуть в любом DocumentedFormAction
-    // *     экшне
-    // */
-    //public static function getDefaultErrorCodes()
-    //{
-    //    return [
-    //        ErrorResponse::ERROR_CODE_UNKNOWN,
-    //        ErrorResponse::ERROR_CODE_FORM_NOT_SUBMITTED,
-    //        ErrorResponse::ERROR_CODE_FORM_PARAMS_ERROR,
-    //    ];
-    //}
-
-    protected static function responseClass()
+    /**
+     * Hook method, that is called befor input data validation.
+     * Does nothing by default, but can be used for example to modify data in request.
+     */
+    protected function beforeDataValidation(): void
     {
-        return str(static::class)->removeRight('Action').'ResponseForm';
     }
 
-    protected static function formClass()
+    /**
+     * Произвести валидацию входных данных, для не переданных данных установить значения по
+     * умолчанию и отдать в виде массива. В качестве класса с формой входных данных используется
+     * naming convention: от наименования класса убирается Action и добавляется "RequestForm"
+     * (MyGoodAction -> MyGoodRequestForm). Если валидация входных данных не прошла, вернет готовый
+     * JsonResponse с ошибкой.
+     *
+     * Кроме этого, для JSON-запросов, в которых не передано ни одного параметра, производится поиск
+     * скалярного аттрибута с назначенным значением по-умолчанию. Первый из таких найденных
+     * элементов подставляется в запрос, что позволяет избежать «хаков» и постановки таких значений
+     * в запрос вручную.
+     *
+     * @return Response
+     */
+    public function __invoke(): Response
     {
-        return str(static::class)->removeRight('Action').'RequestForm';
-        //return static::class.'Form';
+        $this->beforeDataValidation();
+
+        $actionInputForm = static::formClass();
+        if (!\class_exists($actionInputForm)) {
+            return new DefaultErrorResponse('Class '.$actionInputForm.' assumed as input data form class for action '.static::class.' but class does not exists!');
+        }
+
+        if (($this->request->getMethod() === Request::METHOD_POST) && ($this->request->request->count() === 0)) {
+            $this->addDefaultFormValuesToEmptyRequest($this->request, static::formClass());
+        }
+
+        try {
+            $validationResult = $this->processInputDataViaForm();
+        } catch (FormValidationFailedException $e) {
+            return new DefaultErrorResponse($e->getMessage(), $e->getCode(), null, $e->getExtraData());
+        }
+
+        if ($this->isResponseExampleRequested()) {
+            return $this->generateResponseExample();
+        }
+
+        return $this->handle($validationResult->getData(), $validationResult->getExtraData());
+    }
+
+    /**
+     * @param array $data Does not include extra data if provided any! Only fields that were defined in the input form!
+     * @param array $extraData Extra data that was passed (non-declared in input form fields)
+     *
+     * @return Response
+     */
+    abstract public function handle(array $data, array $extraData = []): Response;
+
+    /**
+     * @return FormInterface
+     * @throws \Exception
+     */
+    protected function getValidatedForm(): FormInterface
+    {
+        if (!$this->validatedForm instanceof FormInterface) {
+            throw new \Exception('Form must be validated before using in action');
+        }
+        return $this->validatedForm;
+    }
+
+    /**
+     * @param string $formClass
+     * @param null $data
+     * @param array $options
+     *
+     * @return FormInterface
+     * @throws FormValidationFailedException
+     */
+    protected function processInputDataViaForm(string $formClass = null, $data = null, array $options = []): FormInterface
+    {
+        $validator = $this->formFactory->create($formClass ?: static::formClass(), $data, \array_merge($this->defaultRequestFormOptions, $options));
+        $validator->handleRequest($this->request);
+
+        if (!$validator->isSubmitted()) {
+            throw new FormValidationFailedException('Data not sent', Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$validator->isValid()) {
+            throw new FormValidationFailedException('Invalid data sent', Response::HTTP_BAD_REQUEST, $this->getFormErrors($validator));
+        }
+
+        $this->validatedForm = $validator;
+        return $validator;
+    }
+
+    /**
+     * Получить подробные сведения об ошибках в форме
+     *
+     * @param FormInterface $form
+     *
+     * @return array
+     */
+    protected function getFormErrors(FormInterface $form): array
+    {
+        $formErrors = $form->getErrors(true);
+        $formData = [];
+        foreach ($formErrors as $error) {
+            for ($fieldName = [], $field = $error->getOrigin(); $field; $field = $field->getParent()) {
+                if ($field->getName()) {
+                    $fieldName[] = $field->getName();
+                }
+            }
+            $fieldName = implode('.', array_reverse($fieldName));
+
+            $formData[] = [
+                'field' => $fieldName,
+                'message' => $error->getMessage(),
+                'parameters' => $error->getMessageParameters(),
+            ];
+        }
+        return $formData;
+    }
+
+    protected static function responseClass(): string
+    {
+        return JsonApiSchema::generateResponseFormClass(static::class);
+    }
+
+    protected static function formClass(): string
+    {
+        return JsonApiSchema::generateActionFormClass(static::class);
     }
 
     public static function getFormClass(): string
@@ -96,31 +203,23 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
     }
 
     /**
-     * Произвести валидацию входных данных, для не переданных данных установить значения по
-     * умолчанию и отдать в виде массива. В качестве класса с формой входных данных используется
-     * naming convention: к наименованию класса добавляется "Form" (MyGoodAction ->
-     * MyGoodActionForm). Если валидация входных данных не прошла, вернет готовый JsonResponse с
-     * ошибкой.
-     *
-     * Кроме этого, для JSON-запросов, в которых не передано ни одного параметра, производится поиск
-     * скалярного аттрибута с назначенным значением по-умолчанию. Первый из таких найденных
-     * элементов подставляется в запрос, что позволяет избежать «хаков» и постановки таких значений
-     * в запрос вручную, как это делалось ранее.
+     * Важно, эта функция возвращает ТОЛЬКО определенные во входной форме поля
      *
      * @return DefaultErrorResponse|array
+     * @throws \Exception
      */
-    protected function getJsonData()
+    protected function getJsonData(): array
     {
-        $actionInputForm = static::formClass();
-        if (!\class_exists($actionInputForm)) {
-            throw new \RuntimeException($actionInputForm.' assumed as input data form class for action '.static::class.' but class does not exists!');
-        }
+        return $this->getValidatedForm()->getData();
+    }
 
-        if (($this->request->getMethod() === Request::METHOD_POST) && ($this->request->request->count() === 0)) {
-            $this->addDefaultFormValuesToEmptyRequest($this->request, static::formClass());
-        }
-
-        return $this->getDataViaForm($this->formFactory, $this->request, static::formClass());
+    /**
+     * @return array
+     * @throws \Exception
+     */
+    protected function getJsonExtraData(): array
+    {
+        return $this->getValidatedForm()->getExtraData();
     }
 
     /**
@@ -140,7 +239,7 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
                 $type = $element->getConfig()->getType()->getInnerType();
                 $typeClass = \get_class($type);
 
-                // дефолтное значение подставляем только для скаляров
+                // дефолтное значение подставляем только для скаляров из приведенного списка
                 if (!\in_array($typeClass, [
                     BooleanType::class,
                     Type\EmailType::class,
@@ -156,8 +255,8 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
                     continue;
                 }
 
-                if ($config->hasAttribute('data_collector/passed_options')) {
-                    $passedOptions = $config->getAttribute('data_collector/passed_options');
+                if ($config->hasAttribute(FormDocCollector::OPTIONS_FIELD_NAME)) {
+                    $passedOptions = $config->getAttribute(FormDocCollector::OPTIONS_FIELD_NAME);
                     if ($passedOptions === null) {
                         $passedOptions = [];
                     }
@@ -178,9 +277,9 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
         }
     }
 
-    public function isResponseExampleRequested()
+    public function isResponseExampleRequested(): bool
     {
-        return $this->request->query->has('fakeRequest');
+        return $this->request->query->has($this->fakeRequestQueryParameterName);
     }
 
     /**

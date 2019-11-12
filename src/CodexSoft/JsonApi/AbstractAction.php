@@ -19,63 +19,7 @@ abstract class AbstractAction extends AbstractController
     /** @var Request  */
     protected $request;
 
-    /** @var FormFactoryInterface */
-    protected $formFactory;
-
     abstract public function __invoke(): Response;
-
-    /**
-     * @param FormFactoryInterface $formFactory
-     * @param Request $request
-     * @param string $formClass
-     * @param mixed|null $data
-     * @param array $options
-     *
-     * @return DefaultErrorResponse|mixed
-     */
-    protected function getDataViaForm(FormFactoryInterface $formFactory, Request $request, string $formClass, $data = null, array $options = [])
-    {
-        $validator = $formFactory->create($formClass, $data, $options);
-        $validator->handleRequest($request);
-
-        if (!$validator->isSubmitted()) {
-            return new DefaultErrorResponse('Data not sent', Response::HTTP_BAD_REQUEST);
-        }
-
-        if (!$validator->isValid()) {
-            return new DefaultErrorResponse('Invalid data sent', Response::HTTP_BAD_REQUEST, null, $this->getFormErrors($validator));
-        }
-
-        return $validator->getData();
-    }
-
-    /**
-     * Получить подробные сведения об ошибках в форме
-     *
-     * @param FormInterface $form
-     *
-     * @return array
-     */
-    protected function getFormErrors(FormInterface $form): array
-    {
-        $formErrors = $form->getErrors(true);
-        $formData = [];
-        foreach ($formErrors as $error) {
-            for ($fieldName = [], $field = $error->getOrigin(); $field; $field = $field->getParent()) {
-                if ($field->getName()) {
-                    $fieldName[] = $field->getName();
-                }
-            }
-            $fieldName = implode('.', array_reverse($fieldName));
-
-            $formData[] = [
-                'field' => $fieldName,
-                'message' => $error->getMessage(),
-                'parameters' => $error->getMessageParameters(),
-            ];
-        }
-        return $formData;
-    }
 
     /**
      * Default route name generator copied and adapted from
