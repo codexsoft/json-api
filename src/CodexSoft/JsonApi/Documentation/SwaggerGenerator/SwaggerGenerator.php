@@ -382,7 +382,8 @@ class SwaggerGenerator
 
         /* Допущение, что экшн заточен под один конкретный метод */
         if (\count($methods)) {
-            $method = Arrays::tool()->getFirst($methods);
+            //$method = Arrays::tool()->getFirst($methods);
+            $method = Arrays::getFirst($methods);
         }
 
         $requestTags = $actionDocumentation->tags;
