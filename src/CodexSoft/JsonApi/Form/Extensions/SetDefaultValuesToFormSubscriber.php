@@ -52,6 +52,7 @@ class SetDefaultValuesToFormSubscriber implements EventSubscriberInterface
 
         }
 
-        $event->setData($defaultedData);
+        //$event->setData($defaultedData);
+        $event->setData(\array_merge($data, $defaultedData));
     }
 }
