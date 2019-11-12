@@ -4,7 +4,10 @@ namespace CodexSoft\JsonApi;
 
 use CodexSoft\Code\AbstractModuleSchema;
 use CodexSoft\Code\Helpers\Strings;
+use CodexSoft\JsonApi\Form\AbstractForm;
 use CodexSoft\JsonApi\Form\Field;
+use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
+use function CodexSoft\Code\str;
 
 class JsonApiSchema extends AbstractModuleSchema
 {
@@ -21,8 +24,40 @@ class JsonApiSchema extends AbstractModuleSchema
     /** @var string */
     private $pathToForms;
 
+    /** @var string */
+    public $baseActionClass = DocumentedFormAction::class;
+
+    /** @var string */
+    public $baseActionFormClass = AbstractForm::class;
+
     /** @var string  */
-    private $fieldHelperClass = Field::class;
+    public $fieldHelperClass = Field::class;
+
+    /** @var string  */
+    public $baseSuccessResponseClass = DefaultSuccessResponse::class;
+
+    ///**
+    // * @var \Closure function(string $actionFqnClass): string
+    // * for example, Action\MyAction -> Action\MyActionRequestForm
+    // */
+    //private $generateRequestFormClassFromActionClass;
+
+    //public function __construct()
+    //{
+    //    $this->generateRequestFormClassFromActionClass = function(string $actionFqnClass): string {
+    //        return $actionFqnClass.'RequestForm';
+    //    };
+    //}
+
+    public static function generateActionFormClass(string $actionFqnClass): string
+    {
+        return str($actionFqnClass)->removeRight('Action').'RequestForm';
+    }
+
+    public static function generateResponseFormClass(string $actionFqnClass): string
+    {
+        return str($actionFqnClass)->removeRight('Action').'ResponseForm';
+    }
 
     /**
      * @param string $namespaceActions
@@ -113,11 +148,25 @@ class JsonApiSchema extends AbstractModuleSchema
     }
 
     /**
-     * @return string
+     * @param string $baseActionClass
+     *
+     * @return JsonApiSchema
      */
-    public function getFieldHelperClass(): string
+    public function setBaseActionClass(string $baseActionClass): JsonApiSchema
     {
-        return $this->fieldHelperClass;
+        $this->baseActionClass = $baseActionClass;
+        return $this;
+    }
+
+    /**
+     * @param string $baseSuccessResponseClass
+     *
+     * @return JsonApiSchema
+     */
+    public function setBaseSuccessResponseClass(string $baseSuccessResponseClass): JsonApiSchema
+    {
+        $this->baseSuccessResponseClass = $baseSuccessResponseClass;
+        return $this;
     }
 
 }

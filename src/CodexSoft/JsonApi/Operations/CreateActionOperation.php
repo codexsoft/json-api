@@ -99,11 +99,8 @@ class CreateActionOperation extends Operation
             $this->fqnActionClass = $baseActionsNamespace.$actionClass;
         }
 
-        //$this->fqnActionFormClass = $this->fqnActionClass.'Form';
-        //$this->fqnActionResponseClass = $this->fqnActionClass.'Response';
-
-        $this->fqnActionFormClass = $this->fqnActionClass.'RequestForm';
-        $this->fqnActionResponseClass = $this->fqnActionClass.'ResponseForm';
+        $this->fqnActionFormClass = JsonApiSchema::generateActionFormClass($this->fqnActionClass);
+        $this->fqnActionResponseClass = JsonApiSchema::generateResponseFormClass($this->fqnActionClass);
 
         $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
         $this->actionNamespace = Classes::getNamespace($this->fqnActionClass);
@@ -142,7 +139,7 @@ class CreateActionOperation extends Operation
      */
     protected function generateActionClassCode(): string
     {
-        $documentedFormActionClass = DocumentedFormAction::class;
+        $documentedFormActionClass = $this->jsonApiSchema->baseActionClass;
         $responseClass = \Symfony\Component\HttpFoundation\Response::class;
         $routeAnnotationClass = \Symfony\Component\Routing\Annotation\Route::class;
 
@@ -199,8 +196,8 @@ class CreateActionOperation extends Operation
 
     protected function generateActionFormClassCode()
     {
-        $baseFormClass = AbstractForm::class;
-        $fieldClass = Field::class;
+        $baseFormClass = $this->jsonApiSchema->baseActionFormClass;
+        $fieldClass = $this->jsonApiSchema->fieldHelperClass;
         $swagenInterface = \CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenInterface::class;
         $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
 
@@ -247,9 +244,9 @@ class CreateActionOperation extends Operation
 
     protected function generateActionResponseFormClassCode(): string
     {
-        $fieldClass = Field::class;
+        $fieldClass = $this->jsonApiSchema->fieldHelperClass;
         $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
-        $baseSuccessResponseClass = DefaultSuccessResponse::class;
+        $baseSuccessResponseClass = $this->jsonApiSchema->baseSuccessResponseClass;
 
         $code = [
             '<?php',
