@@ -3,17 +3,13 @@
 
 namespace CodexSoft\JsonApi\Documentation;
 
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\DateAndTime\DateAndTime;
 use CodexSoft\JsonApi\Documentation\Collector\ApiDoc;
 use CodexSoft\JsonApi\Documentation\Collector\FormDoc;
 use CodexSoft\JsonApi\Documentation\Collector\FormElementDoc;
-use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
-use Symfony\Component\Form\Extension\Core\Type\CollectionType;
-use Symfony\Component\Validator\Constraints;
-use CodexSoft\Code\Constants;
-use CodexSoft\JsonApi\Form\AbstractForm;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
+use CodexSoft\JsonApi\Helper\Loggable;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\Extension\Core\Type;
@@ -123,20 +119,20 @@ class FormExampleGenerator
         return \count($choiceTypeChoices) ? $choiceTypeChoices[\array_rand($choiceTypeChoices)] : null;
     }
 
-    /**
-     * @param FormDoc|FormElementDoc $scalarOrForm
-     *
-     * @return array|int|mixed|string|null
-     * @throws \ReflectionException
-     */
-    protected function generateScalarOrFormExample($scalarOrForm)
-    {
-        if (is_subclass_of($entryClass, AbstractForm::class)) {
-            return $this->generateExample($entryClass);
-        }
-
-        return $this->generateScalarExample(new $entryClass, $passedOptions);
-    }
+    ///**
+    // * @param FormDoc|FormElementDoc $scalarOrForm
+    // *
+    // * @return array|int|mixed|string|null
+    // * @throws \ReflectionException
+    // */
+    //protected function generateScalarOrFormExample($scalarOrForm)
+    //{
+    //    if (is_subclass_of($entryClass, AbstractForm::class)) {
+    //        return $this->generateExample($entryClass);
+    //    }
+    //
+    //    return $this->generateScalarExample(new $entryClass, $passedOptions);
+    //}
 
     protected function generateScalarExample(FormElementDoc $element)
     {
@@ -200,16 +196,16 @@ class FormExampleGenerator
         }
 
         if ($elementClassReflection->isSubclassOf(Type\DateType::class)) {
-            return $this->faker->date(Constants::FORMAT_YMD);
+            return $this->faker->date(DateAndTime::FORMAT_YMD);
         }
 
         if ($elementClassReflection->isSubclassOf(Type\TimeType::class)) {
-            return $this->faker->time(Constants::FORMAT_HOURMIN);
+            return $this->faker->time(DateAndTime::FORMAT_HOURMIN);
         }
 
         // todo: timestamp?
         if ($elementClassReflection->isSubclassOf(Type\DateTimeType::class)) {
-            return $this->faker->dateTime->format(Constants::FORMAT_YMD_HIS);
+            return $this->faker->dateTime->format(DateAndTime::FORMAT_YMD_HIS);
         }
 
         if ($elementClassReflection->isSubclassOf(JsonType::class)) {

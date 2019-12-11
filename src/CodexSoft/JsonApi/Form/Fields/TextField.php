@@ -5,7 +5,7 @@ namespace CodexSoft\JsonApi\Form\Fields;
 use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Validator\Constraints as Assert;
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
 
 class TextField extends AbstractField
 {

@@ -2,16 +2,15 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\JsonApi\Helper\Loggable;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseExternalFormInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
 use Symfony\Component\Form\FormTypeInterface;
-use CodexSoft\Code\Helpers\Classes;
 use CodexSoft\JsonApi\Response\AbstractBaseResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenResponseInterface;
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
 
 class ResponseDocCollector
 {
@@ -32,6 +31,7 @@ class ResponseDocCollector
      *
      * @return ResponseDoc|null
      * @throws \ReflectionException
+     * @throws \Exception
      */
     public function collect(string $responseClass): ?ResponseDoc
     {

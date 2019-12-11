@@ -2,7 +2,7 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\JsonApi\Helper\Loggable;
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionDescriptionInterface;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionExternalFormInterface;
@@ -12,8 +12,8 @@ use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionTagsInterfa
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Routing\Route;
-use CodexSoft\Code\Helpers\Classes;
-use function CodexSoft\Code\str;
+use CodexSoft\Code\Classes\Classes;
+use function Stringy\create as str;
 
 class ActionDocCollector
 {

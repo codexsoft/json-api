@@ -2,13 +2,12 @@
 
 namespace CodexSoft\JsonApi\Form\Fields;
 
-use CodexSoft\Code\Helpers\Arrays;
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Validator\Constraint;
 use Symfony\Component\Form\FormBuilderInterface;
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
 
 abstract class AbstractField
 {
@@ -21,6 +20,27 @@ abstract class AbstractField
 
     /** @var array */
     protected $options = [];
+
+    /**
+     * Чуть более читабельная конвертация массива (например, используется в Swagen). Пример:
+     * BODY_TYPE_BOARD:1, BODY_TYPE_REFRIGERATOR:2, BODY_TYPE_TENT:3, BODY_TYPE_ISOTERM:4
+     *
+     * @param array $array
+     *
+     * @param string $delimiter
+     *
+     * @return string
+     */
+    public static function explainArray(array $array, string $delimiter = ' '): string
+    {
+        return str_replace( ['"', ','], ['', ','.$delimiter], \json_encode($array, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+    }
+
+    protected static function explainArrayBr(array $array): string
+    {
+        $result = self::explainArray($array,'<br />');
+        return (string) str($result)->removeLeft('{')->removeRight('}')->surround('<br>');
+    }
 
     protected function getDefaultOptions(): array
     {
@@ -38,7 +58,7 @@ abstract class AbstractField
     {
         if ($this->choicesSourceArray && \is_string($this->options['label']) && $this->options['label'] !== '') {
             if (\count($this->choicesSourceArray) <= 10) {
-                $this->options['label'] .= Arrays::explainArrayBr($this->choicesSourceArray);
+                $this->options['label'] .= self::explainArrayBr($this->choicesSourceArray);
             } else {
                 $coll = new ArrayCollection($this->choicesSourceArray);
                 $keys = new ArrayCollection($coll->getKeys());
@@ -46,7 +66,7 @@ abstract class AbstractField
                 $keys->next();
                 $secondKey = $keys->current();
                 $lastKey = $keys->last();
-                $this->options['label'] .= Arrays::explainArrayBr([
+                $this->options['label'] .= self::explainArrayBr([
                     $firstKey  => $this->choicesSourceArray[$firstKey],
                     $secondKey => $this->choicesSourceArray[$secondKey],
                     '...'      => '',
@@ -56,6 +76,12 @@ abstract class AbstractField
         }
     }
 
+    /**
+     * @param FormBuilderInterface $builder
+     * @param string $name
+     *
+     * @noinspection PhpUnusedParameterInspection
+     */
     public function import(FormBuilderInterface $builder, string $name)
     {
         $defaultOptions = $this->getDefaultOptions();

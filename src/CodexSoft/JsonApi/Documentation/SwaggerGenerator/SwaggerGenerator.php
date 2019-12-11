@@ -3,18 +3,19 @@
 
 namespace CodexSoft\JsonApi\Documentation\SwaggerGenerator;
 
-use CodexSoft\Code\Helpers\Arrays;
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\Code\Arrays\Arrays;
 use CodexSoft\JsonApi\Documentation\Collector\ActionDoc;
 use CodexSoft\JsonApi\Documentation\Collector\ApiDoc;
 use CodexSoft\JsonApi\Documentation\Collector\FormDoc;
 use CodexSoft\JsonApi\Documentation\Collector\ResponseDoc;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
+use CodexSoft\JsonApi\Helper\Loggable;
 use Symfony\Component\HttpFoundation\Response;
-use function CodexSoft\Code\str;
 use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\HttpFoundation\Request;
+
+use function Stringy\create as str;
 
 class SwaggerGenerator
 {

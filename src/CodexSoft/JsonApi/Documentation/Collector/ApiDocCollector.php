@@ -2,21 +2,16 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use CodexSoft\Code\Helpers\Files;
-use CodexSoft\Code\Traits\Loggable;
-//use CodexSoft\JsonApi\JsonApiSchema;
+use CodexSoft\Code\Files\Files;
+use CodexSoft\JsonApi\Helper\Loggable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
-//use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Router;
 
 class ApiDocCollector
 {
 
     use Loggable;
-
-    ///** @var JsonApiSchema */
-    //private $jsonApiSchema;
 
     /** @var Router */
     private $router;
@@ -28,7 +23,6 @@ class ApiDocCollector
     {
         $this->logger = $logger;
         $this->router = $router;
-        //$this->jsonApiSchema = $jsonApiSchema;
         $this->formFactory = $formFactory;
     }
 

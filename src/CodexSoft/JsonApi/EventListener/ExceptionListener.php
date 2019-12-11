@@ -34,7 +34,7 @@ class ExceptionListener implements EventSubscriberInterface
 
     public function onKernelException(ExceptionEvent $event)
     {
-        $exception = $event->getException();
+        $exception = $event->getThrowable();
 
         $this->logger->warning('[EXCEPTION] '.\get_class($exception));
         $this->logger->warning(' | code '.$exception->getCode().' message: «'.$exception->getMessage().'»');

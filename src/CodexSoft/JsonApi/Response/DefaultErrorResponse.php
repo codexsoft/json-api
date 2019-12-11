@@ -27,8 +27,12 @@ class DefaultErrorResponse extends AbstractBaseResponse
      *     трейс исключения будет залогирован в БД)
      * @param array $extraData дополнительные данные, которые следует передать с ответом
      */
-    public function __construct(?string $errorMessage = 'Unknown error', $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR, \Throwable $exception = null, array $extraData = [])
-    {
+    public function __construct(
+        ?string $errorMessage = 'Unknown error',
+        $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR,
+        \Throwable $exception = null,
+        array $extraData = []
+    ) {
         $this->errorMessage = $errorMessage ?: Response::$statusTexts[(int) $statusCode];
         $this->statusCode = $statusCode;
         $this->exception = $exception;

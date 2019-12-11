@@ -3,14 +3,12 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use CodexSoft\Code\Traits\Loggable;
+use CodexSoft\JsonApi\Helper\Loggable;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Form\FormFactory;
-use Symfony\Component\Form\FormTypeInterface;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Validator\Constraints;
 use Symfony\Component\Form\Extension\Core\Type;
-use CodexSoft\Code\Helpers\Classes;
+use CodexSoft\Code\Classes\Classes;
 use CodexSoft\JsonApi\Form\AbstractForm;
 use CodexSoft\JsonApi\Form\Extensions\FormFieldDefaultValueExtension;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
@@ -40,6 +38,7 @@ class FormDocCollector
      *
      * @return FormDoc|null
      * @throws \ReflectionException
+     * @throws \Exception
      */
     public function collect(string $formClass): ?FormDoc
     {

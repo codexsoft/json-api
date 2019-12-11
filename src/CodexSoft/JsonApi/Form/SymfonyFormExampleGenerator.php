@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi\Form;
 
+use CodexSoft\DateAndTime\DateAndTime;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
@@ -11,7 +12,6 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Validator\Constraints;
-use CodexSoft\Code\Constants;
 use Symfony\Component\Form\Extension\Core\Type;
 
 class SymfonyFormExampleGenerator
@@ -317,16 +317,16 @@ class SymfonyFormExampleGenerator
         }
 
         if ($innerType instanceof Type\DateType) {
-            return $this->faker->date(Constants::FORMAT_YMD);
+            return $this->faker->date(DateAndTime::FORMAT_YMD);
         }
 
         if ($innerType instanceof Type\TimeType) {
-            return $this->faker->time(Constants::FORMAT_HOURMIN);
+            return $this->faker->time(DateAndTime::FORMAT_HOURMIN);
         }
 
         if ($innerType instanceof Type\DateTimeType) {
             // todo: timestamp?
-            return $this->faker->dateTime->format(Constants::FORMAT_YMD_HIS);
+            return $this->faker->dateTime->format(DateAndTime::FORMAT_YMD_HIS);
             //return 'DateTimeType not implemented';
         }
 

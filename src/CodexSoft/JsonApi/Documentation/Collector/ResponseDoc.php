@@ -2,7 +2,7 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
-use function CodexSoft\Code\str;
+use function Stringy\create as str;
 
 class ResponseDoc
 {

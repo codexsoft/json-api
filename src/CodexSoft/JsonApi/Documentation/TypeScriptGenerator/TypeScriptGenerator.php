@@ -1,11 +1,9 @@
 <?php
 
-
 namespace CodexSoft\JsonApi\Documentation\TypeScriptGenerator;
 
-
-use CodexSoft\Code\Traits\Loggable;
 use CodexSoft\JsonApi\Documentation\Collector\ApiDoc;
+use CodexSoft\JsonApi\Helper\Loggable;
 
 class TypeScriptGenerator
 {
