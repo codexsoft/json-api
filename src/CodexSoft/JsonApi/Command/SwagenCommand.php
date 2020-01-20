@@ -28,7 +28,8 @@ class SwagenCommand extends Command
             // the full command description shown when running the command with
             // the "--help" option
             ->setHelp('This command allows you to automatically generate swagger documentation from symfony forms')
-            ->addArgument('paths',InputArgument::IS_ARRAY,'destination file path (MUST be PSR4 roots!)')
+            //->addArgument('paths', InputArgument::IS_ARRAY, 'destination file path (MUST be PSR4 roots!)')
+            ->addArgument('paths', InputArgument::IS_ARRAY, 'source path in format Namespace\\To\\Api=./src/Namespace/To/Api')
             ->addOption('destinationFile','d',InputArgument::OPTIONAL,'destination file path')
             //->addOption('strict','s',InputOption::VALUE_NONE,'if set, any exceptions will stop generation process')
         ;
@@ -64,15 +65,23 @@ class SwagenCommand extends Command
 
         $logger = new ConsoleLogger($output);
 
-        $paths = $input->getArgument('paths') ?: [];
-        \array_walk($paths, function(&$val) {
-            $val = realpath($val);
-        });
+        $paths = [];
+        $pathsRaw = $input->getArgument('paths') ?: [];
+        if ($pathsRaw) {
+            foreach ($pathsRaw as $pathRaw) {
+                [$namespaceArg, $pathArg] = explode('=', $pathRaw);
+                $paths[$namespaceArg] = $pathArg;
+            }
 
-        $paths = \array_flip($paths);
-        \array_walk($paths, function(&$val) {
-            $val = is_int($val) ? '' : $val;
-        });
+            \array_walk($paths, function(&$val) {
+                $val = realpath($val);
+            });
+
+            $paths = \array_flip($paths);
+            \array_walk($paths, function(&$val) {
+                $val = is_int($val) ? '' : $val;
+            });
+        }
         $paths[realpath(dirname(__DIR__))] = 'CodexSoft\\JsonApi\\';
 
         $apiDoc = (new ApiDocCollector($router, $formFactory, $logger))->collect($paths);

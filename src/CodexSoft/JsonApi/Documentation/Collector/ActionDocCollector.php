@@ -145,7 +145,7 @@ class ActionDocCollector
             }
 
             $docAction->inputFormClass = $actionFormClass;
-            $logger->info('Action '.$actionClass.' uses custom form '.$actionFormClass);
+            $logger->debug('Action '.$actionClass.' uses custom form '.$actionFormClass);
         }
 
         /* @var SwagenActionInterface $actionClass */

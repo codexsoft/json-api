@@ -160,8 +160,8 @@ class ApiDocCollector
         foreach ($routes as $routeName => $route) {
             try {
                 $routeClass = $route->getDefault('_controller');
-                if ($paths && \class_exists($routeClass) && !str((new \ReflectionClass($routeClass))->getFileName())->startsWithAny($paths)) {
-                    $this->logger->info('action '.$route->getPath().' skipped because it is not in paths whitelist');
+                if ($paths && \class_exists($routeClass) && !str((new \ReflectionClass($routeClass))->getFileName())->startsWithAny(\array_keys($paths))) {
+                    $this->logger->debug('action '.$route->getPath().' skipped because it is not in paths whitelist');
                     continue;
                 }
                 $actionDoc = (new ActionDocCollector($this->logger))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
