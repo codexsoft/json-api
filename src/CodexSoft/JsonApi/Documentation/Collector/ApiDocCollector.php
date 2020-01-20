@@ -2,6 +2,7 @@
 
 namespace CodexSoft\JsonApi\Documentation\Collector;
 
+use function Stringy\create as str;
 use CodexSoft\Code\Files\Files;
 use CodexSoft\JsonApi\Helper\Loggable;
 use Psr\Log\LoggerInterface;
@@ -27,16 +28,16 @@ class ApiDocCollector
     }
 
     /**
+     * @param array $paths
+     *
      * @return ApiDoc
-     * @throws \ReflectionException
-     * @throws \Throwable
      */
     public function collect(array $paths): ApiDoc
     {
         $docApi = new ApiDoc;
 
         $pathPrefixToRemove = '';
-        $docApi->actions = $this->collectActions($pathPrefixToRemove);
+        $docApi->actions = $this->collectActions($paths, $pathPrefixToRemove);
 
         foreach ($paths as $path => $namespace) {
             /** @noinspection SlowArrayOperationsInLoopInspection */
@@ -56,7 +57,6 @@ class ApiDocCollector
      * @param string $responsesNamespace
      *
      * @return array
-     * @throws \ReflectionException
      */
     protected function collectResponses(string $responsesDir, string $responsesNamespace): array
     {
@@ -145,11 +145,12 @@ class ApiDocCollector
     }
 
     /**
-     * @param null|string $pathPrefixToRemove
+     * @param string[]|null $paths
+     * @param string|null $pathPrefixToRemove
      *
      * @return ActionDoc[]
      */
-    protected function collectActions(?string $pathPrefixToRemove = null): array
+    protected function collectActions(array $paths = null, ?string $pathPrefixToRemove = null): array
     {
         $actions = [];
 
@@ -158,6 +159,11 @@ class ApiDocCollector
 
         foreach ($routes as $routeName => $route) {
             try {
+                $routeClass = $route->getDefault('_controller');
+                if ($paths && \class_exists($routeClass) && !str((new \ReflectionClass($routeClass))->getFileName())->startsWithAny($paths)) {
+                    $this->logger->info('action '.$route->getPath().' skipped because it is not in paths whitelist');
+                    continue;
+                }
                 $actionDoc = (new ActionDocCollector($this->logger))->setPathPrefixToRemove($pathPrefixToRemove)->collect($route);
                 if ($actionDoc instanceof ActionDoc) {
                     $this->logger->info('ADDED action '.$route->getPath());
