@@ -8,8 +8,12 @@ use function Stringy\create as str;
 
 class TextField extends AbstractField
 {
-    /** @var bool */
-    private static $generateFakeNames = false;
+    /**
+     * @var bool
+     * is true by default for compatibility reasons
+     * todo: make false by default in next version
+     */
+    private static $generateFakeNames = true;
 
     public function import(FormBuilderInterface $builder, string $name)
     {
