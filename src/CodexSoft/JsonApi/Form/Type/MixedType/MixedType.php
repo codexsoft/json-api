@@ -1,18 +1,18 @@
 <?php
 
-namespace CodexSoft\JsonApi\Form\Type\JsonType;
+namespace CodexSoft\JsonApi\Form\Type\MixedType;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-class JsonType extends AbstractType
+class MixedType extends AbstractType
 {
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder->resetModelTransformers();
-        $builder->addModelTransformer(new JsonTransformer);
+        $builder->addModelTransformer(new MixedTransformer());
     }
 
     public function getDefaultOptions(array $options)
@@ -27,6 +27,6 @@ class JsonType extends AbstractType
 
     public function getName()
     {
-        return 'codexsoft_jsonapi_json_type';
+        return 'codexsoft_jsonapi_mixed_type';
     }
 }

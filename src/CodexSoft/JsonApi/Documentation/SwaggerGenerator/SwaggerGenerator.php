@@ -10,6 +10,7 @@ use CodexSoft\JsonApi\Documentation\Collector\FormDoc;
 use CodexSoft\JsonApi\Documentation\Collector\ResponseDoc;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
+use CodexSoft\JsonApi\Form\Type\MixedType\MixedType;
 use CodexSoft\JsonApi\Helper\Loggable;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Form\Extension\Core\Type;
@@ -36,6 +37,7 @@ class SwaggerGenerator
         Type\TimeType::class => 'string',
         Type\UrlType::class => 'string',
         JsonType::class => 'object',
+        MixedType::class => 'mixed',
     ];
 
     /** @var ApiDoc */

@@ -5,6 +5,7 @@ namespace CodexSoft\JsonApi\Form;
 use CodexSoft\DateAndTime\DateAndTime;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
+use CodexSoft\JsonApi\Form\Type\MixedType\MixedType;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -332,6 +333,10 @@ class SymfonyFormExampleGenerator
 
         if ($innerType instanceof JsonType) {
             return [];
+        }
+
+        if ($innerType instanceof MixedType) {
+            return 42;
         }
 
         return 'UNKNOWN DATA TYPE';

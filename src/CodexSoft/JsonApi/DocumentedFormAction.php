@@ -5,6 +5,7 @@ namespace CodexSoft\JsonApi;
 use CodexSoft\JsonApi\Documentation\Collector\FormDocCollector;
 use CodexSoft\JsonApi\Form\Extensions\FormFieldDefaultValueExtension;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
+use CodexSoft\JsonApi\Form\Type\MixedType\MixedType;
 use CodexSoft\JsonApi\Response\DefaultErrorResponse;
 use CodexSoft\JsonApi\Response\DefaultSuccessResponse;
 use CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenActionExternalFormInterface;
@@ -242,6 +243,7 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
                 // дефолтное значение подставляем только для скаляров из приведенного списка
                 if (!\in_array($typeClass, [
                     BooleanType::class,
+                    MixedType::class,
                     Type\EmailType::class,
                     Type\IntegerType::class,
                     Type\NumberType::class,
