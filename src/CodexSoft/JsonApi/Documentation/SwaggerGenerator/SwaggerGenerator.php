@@ -59,20 +59,20 @@ class SwaggerGenerator
     {
         $lines = [];
 
-        \array_push($lines, ...[
-            '@SWG\Swagger(',
-            '    schemes={"https"},',
-            '    host="'.($_SERVER['HTTP_HOST'] ?? 'localhost').'",',
-            '    basePath="",',
-            '    consumes={"application/json"},',
-            '    produces={"application/json"},',
-            '    @SWG\Info(',
-            '        version="1.0.0",',
-            '        title="Test API",',
-            '        description="Булевы значения принимаются в виде INT {0|1}, для некоторых полей допустим набор {0|1|null}",',
-            '    )',
-            ')',
-        ]);
+        //\array_push($lines, ...[
+        //    '@SWG\Swagger(',
+        //    '    schemes={"https"},',
+        //    '    host="'.($_SERVER['HTTP_HOST'] ?? 'localhost').'",',
+        //    '    basePath="",',
+        //    '    consumes={"application/json"},',
+        //    '    produces={"application/json"},',
+        //    '    @SWG\Info(',
+        //    '        version="1.0.0",',
+        //    '        title="Test API",',
+        //    '        description="Булевы значения принимаются в виде INT {0|1}, для некоторых полей допустим набор {0|1|null}",',
+        //    '    )',
+        //    ')',
+        //]);
 
         foreach ($this->apiDoc->forms as $formDoc) {
             if (\is_subclass_of($formDoc->class, Response::class)) {
