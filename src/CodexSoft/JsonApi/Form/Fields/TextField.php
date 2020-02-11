@@ -4,22 +4,27 @@ namespace CodexSoft\JsonApi\Form\Fields;
 
 use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 use function Stringy\create as str;
 
 class TextField extends AbstractField
 {
+    /** @var bool */
+    private static $generateFakeNames = false;
 
     public function import(FormBuilderInterface $builder, string $name)
     {
         parent::import($builder, $name);
-        $this->addExampleForNameFields($name);
+        static::$generateFakeNames && $this->addExampleForNameFields($name);
         $builder->add($name, Type\TextType::class, $this->options);
         return $this;
     }
 
     protected function addExampleForNameFields(string $name): void
     {
+        if (isset($this->options['example'])) {
+            return;
+        }
+
         if (!\class_exists(\Faker\Factory::class)) {
             return;
         }
@@ -63,6 +68,14 @@ class TextField extends AbstractField
         if ($example) {
             $this->example($example);
         }
+    }
+
+    /**
+     * @param bool $generateFakeNames
+     */
+    public static function setGenerateFakeNames(bool $generateFakeNames): void
+    {
+        self::$generateFakeNames = $generateFakeNames;
     }
 
 }
