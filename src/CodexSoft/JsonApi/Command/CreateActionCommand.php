@@ -26,7 +26,8 @@ class CreateActionCommand extends Command
             // the full command description shown when running the command with
             // the "--help" option
             //->setHelp('This command allows you to automatically generate swagger documentation from symfony forms')
-            ->addArgument('actionName',InputArgument::REQUIRED,'new action name, like app.action.product.add')
+            ->addArgument('actionName', InputArgument::REQUIRED, 'new action name, like app.action.product.add')
+            ->addArgument('route', InputArgument::OPTIONAL, 'route for action, like /hello/world')
             //->addOption('strict','s',InputOption::VALUE_NONE,'if set, any exceptions will stop generation process')
         ;
     }
@@ -42,7 +43,10 @@ class CreateActionCommand extends Command
     {
         $output->writeln('Generating action...');
 
-        $this->jsonApiTools->generateAction()->setNewActionName($input->getArgument('actionName'))->execute();
+        $this->jsonApiTools->generateAction()
+            ->setNewActionName($input->getArgument('actionName'))
+            ->setRoute($input->getArgument('route'))
+            ->execute();
         //(new CreateActionOperation)
         //    ->setNewActionName($input->getArgument('actionName'))
         //    ->setJsonApiSchema()
