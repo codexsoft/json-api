@@ -42,7 +42,7 @@ class CreateActionOperation extends Operation
     /** @var string */
     private $actionDir;
 
-    /** @var string */
+    /** @var string|null */
     private $route;
 
     /** @var JsonApiSchema */
@@ -62,7 +62,7 @@ class CreateActionOperation extends Operation
      *
      * @return CreateActionOperation
      */
-    public function setRoute(string $route): CreateActionOperation
+    public function setRoute(?string $route): CreateActionOperation
     {
         $this->route = $route;
         return $this;
