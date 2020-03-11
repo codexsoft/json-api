@@ -3,9 +3,11 @@
 namespace CodexSoft\JsonApi\Command;
 
 use CodexSoft\JsonApi\JsonApiTools;
+use CodexSoft\JsonApi\Operations\CreateActionOperation;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class CreateActionCommand extends Command
@@ -28,7 +30,7 @@ class CreateActionCommand extends Command
             //->setHelp('This command allows you to automatically generate swagger documentation from symfony forms')
             ->addArgument('actionName', InputArgument::REQUIRED, 'new action name, like app.action.product.add')
             ->addArgument('route', InputArgument::OPTIONAL, 'route for action, like /hello/world')
-            //->addOption('strict','s',InputOption::VALUE_NONE,'if set, any exceptions will stop generation process')
+            ->addOption('style', 's', InputOption::VALUE_REQUIRED, 'style of POST action: handle|invoke', CreateActionOperation::STYLE_HANDLE)
         ;
     }
 
@@ -46,6 +48,7 @@ class CreateActionCommand extends Command
         $this->jsonApiTools->generateAction()
             ->setNewActionName($input->getArgument('actionName'))
             ->setRoute($input->getArgument('route'))
+            ->setStyle($input->getOption('style'))
             ->execute();
         //(new CreateActionOperation)
         //    ->setNewActionName($input->getArgument('actionName'))

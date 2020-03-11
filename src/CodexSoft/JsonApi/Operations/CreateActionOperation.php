@@ -19,6 +19,9 @@ use const CodexSoft\Shortcut\TAB;
 class CreateActionOperation extends Operation
 {
     public const ID = 'e115e45a-aa2a-4473-a4e0-9e4398cb3215';
+    public const STYLE_HANDLE = 'handle';
+    public const STYLE_INVOKE = 'invoke';
+
     protected const ERROR_PREFIX = 'CreateActionOperation cannot be completed: ';
 
     /** @var string */
@@ -48,6 +51,12 @@ class CreateActionOperation extends Operation
     /** @var Filesystem */
     private $fs;
 
+    /** @var bool  */
+    private $allowEmptyForm = false;
+
+    /** @var string */
+    private $style = self::STYLE_HANDLE;
+
     /**
      * @param string $route
      *
@@ -56,6 +65,28 @@ class CreateActionOperation extends Operation
     public function setRoute(string $route): CreateActionOperation
     {
         $this->route = $route;
+        return $this;
+    }
+
+    /**
+     * @param bool $allowEmptyForm
+     *
+     * @return CreateActionOperation
+     */
+    public function setAllowEmptyForm(bool $allowEmptyForm): CreateActionOperation
+    {
+        $this->allowEmptyForm = $allowEmptyForm;
+        return $this;
+    }
+
+    /**
+     * @param string $style
+     *
+     * @return CreateActionOperation
+     */
+    public function setStyle(string $style): CreateActionOperation
+    {
+        $this->style = $style;
         return $this;
     }
 
@@ -136,9 +167,11 @@ class CreateActionOperation extends Operation
     protected function generateActionClassCode(): string
     {
         $documentedFormActionClass = $this->jsonApiSchema->baseActionClass;
+        $jsonResponseClass = \Symfony\Component\HttpFoundation\JsonResponse::class;
         $responseClass = \Symfony\Component\HttpFoundation\Response::class;
         $routeAnnotationClass = \Symfony\Component\Routing\Annotation\Route::class;
 
+        // todo: $use array
         $code = [
             '<?php',
             '',
@@ -146,15 +179,59 @@ class CreateActionOperation extends Operation
             '',
             "use {$documentedFormActionClass};", // todo: $this->actionNamespace.DocumentedFormAction::class ?
             "use {$responseClass};",
+            "use {$jsonResponseClass};",
             "use {$routeAnnotationClass};",
             'use '.$this->fqnActionResponseClass.';',
             '',
             'class '.Classes::short($this->fqnActionClass).' extends '.Classes::short($documentedFormActionClass),
             '{',
+            TAB."protected static \$inputStatus = self::STATE_INPUT_NOT_IMPLEMENTED;",
+            TAB."protected static \$outputStatus = self::STATE_OUTPUT_NOT_IMPLEMENTED;",
+            TAB."protected static \$swagenDescription = ''; // todo",
+            TAB.'protected static $allowEmptyForm = '.($this->allowEmptyForm ? 'true' : 'false').';',
+            TAB.'',
+            TAB.'public function handle(array $data, array $extraData = []): Response',
+            TAB.'{',
+            TAB.TAB.'return new JsonResponse([\'data\' => []]);',
+            TAB.'}',
+            TAB.'',
+            '}',
+        ];
+
+        return implode("\n", $code);
+    }
+
+    /**
+     * @return string
+     */
+    protected function generateOldActionClassCode(): string
+    {
+        $documentedFormActionClass = $this->jsonApiSchema->baseActionClass;
+        $jsonResponseClass = \Symfony\Component\HttpFoundation\JsonResponse::class;
+        $responseClass = \Symfony\Component\HttpFoundation\Response::class;
+        $routeAnnotationClass = \Symfony\Component\Routing\Annotation\Route::class;
+
+        // todo: $use array
+        $code = [
+            '<?php',
+            '',
+            "namespace {$this->actionNamespace};",
+            '',
+            "use {$documentedFormActionClass};", // todo: $this->actionNamespace.DocumentedFormAction::class ?
+            "use {$responseClass};",
+            "use {$jsonResponseClass};",
+            "use {$routeAnnotationClass};",
+            'use '.$this->fqnActionResponseClass.';',
+            '',
+            'class '.Classes::short($this->fqnActionClass).' extends '.Classes::short($documentedFormActionClass),
+            '{',
+            TAB."protected static \$inputStatus = self::STATE_INPUT_NOT_IMPLEMENTED;",
+            TAB."protected static \$outputStatus = self::STATE_OUTPUT_NOT_IMPLEMENTED;",
+            TAB."protected static \$swagenDescription = ''; // todo",
+            TAB.'protected static $allowEmptyForm = '.($this->allowEmptyForm ? 'true' : 'false').';',
             TAB.'',
             TAB.'/**',
             TAB.' * @'.Classes::short($routeAnnotationClass).'("'.$this->route.'", methods={"POST"})',
-            //TAB.' * @return RequirementAddResponse|ErrorResponse|array|\Symfony\Component\HttpFoundation\JsonResponse',
             TAB.' * @return \\'.JsonResponse::class,
             TAB.' */',
             TAB.'public function __invoke(): '.Classes::short($responseClass),
@@ -187,7 +264,17 @@ class CreateActionOperation extends Operation
         }
         $this->getLogger()->debug("Will be written to $actionFile");
 
-        $this->fs->dumpFile($actionFile, $this->generateActionClassCode());
+        switch ($this->style === self::STYLE_HANDLE) {
+            case self::STYLE_INVOKE:
+                $this->fs->dumpFile($actionFile, $this->generateOldActionClassCode());
+                break;
+
+            case self::STYLE_HANDLE:
+            default:
+                $this->fs->dumpFile($actionFile, $this->generateActionClassCode());
+                break;
+        }
+
     }
 
     protected function generateActionFormClassCode()

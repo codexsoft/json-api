@@ -37,6 +37,9 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
     /** @var string query parameter name, if present, then auto-generated fake response will be sent */
     protected $fakeRequestQueryParameterName = 'fakeRequest';
 
+    /** @var bool */
+    protected static $allowEmptyForm = false;
+
     /**
      * @var array default options to be passed into request form
      * allow_extra_fields: whether extra (not declared in RequestForm) fields allowed or not
@@ -77,6 +80,14 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
     {
         $this->beforeDataValidation();
 
+        if (static::$allowEmptyForm === true) {
+            if ($this->isResponseExampleRequested()) {
+                return $this->generateResponseExample();
+            }
+
+            return $this->handle([], []);
+        }
+
         $actionInputForm = static::formClass();
         if (!\class_exists($actionInputForm)) {
             return new DefaultErrorResponse('Class '.$actionInputForm.' assumed as input data form class for action '.static::class.' but class does not exists!');
@@ -104,8 +115,14 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
      * @param array $extraData Extra data that was passed (non-declared in input form fields)
      *
      * @return Response
+     *
+     * is not abstract to allow common __invoke style actions without handle method
      */
-    abstract public function handle(array $data, array $extraData = []): Response;
+    public function handle(array $data, array $extraData = []): Response
+    {
+        return new JsonResponse(['data' => []]);
+    }
+    //abstract public function handle(array $data, array $extraData = []): Response;
 
     /**
      * @return FormInterface
