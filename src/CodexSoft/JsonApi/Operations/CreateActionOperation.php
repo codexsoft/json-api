@@ -264,7 +264,7 @@ class CreateActionOperation extends Operation
         }
         $this->getLogger()->debug("Will be written to $actionFile");
 
-        switch ($this->style === self::STYLE_HANDLE) {
+        switch ($this->style) {
             case self::STYLE_INVOKE:
                 $this->fs->dumpFile($actionFile, $this->generateOldActionClassCode());
                 break;
