@@ -40,6 +40,9 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
     /** @var bool */
     protected static $allowEmptyForm = false;
 
+    /** @var bool */
+    protected static $decodeRequestJson = false;
+
     /**
      * @var array default options to be passed into request form
      * allow_extra_fields: whether extra (not declared in RequestForm) fields allowed or not
@@ -52,6 +55,48 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
     {
         $this->request = $requestStack->getCurrentRequest();
         $this->formFactory = $formFactory;
+        $this->decodeRequestJson($this->request);
+    }
+
+    /**
+     * If enabled, decodes string JSON data to PHP variable
+     * @param Request $request
+     */
+    private function decodeRequestJson(Request $request): void
+    {
+        if (!static::$decodeRequestJson) {
+            return;
+        }
+
+        // skip processing request with already decoded JSON data
+        if ($request->attributes->get('json-body-decoded', false)) {
+            return;
+        }
+
+        if ($request->getMethod() !== Request::METHOD_POST) {
+            return;
+        }
+
+        if ($request->getContentType() !== 'json' || !$request->getContent()) {
+            return;
+        }
+
+        $data = \json_decode($request->getContent(), true);
+
+        if (\json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Invalid JSON body: '.\json_last_error_msg());
+        }
+
+        $request->attributes->set('json-body-decoded', true);
+        $request->request->replace(\is_array($data) ? $data : []);
+    }
+
+    /**
+     * @param bool $decodeRequestJson
+     */
+    public static function setDecodeRequestJson(bool $decodeRequestJson): void
+    {
+        self::$decodeRequestJson = $decodeRequestJson;
     }
 
     /**
