@@ -101,6 +101,8 @@ class SwagenCommand extends Command
         $fs = new Filesystem();
         $fs->dumpFile($destFile, $code);
         $output->writeln("Swagger definitions written in $destFile");
+
+        return 0;
     }
 
 }

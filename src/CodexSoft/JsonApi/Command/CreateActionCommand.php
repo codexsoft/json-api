@@ -53,6 +53,7 @@ class CreateActionCommand extends Command
         //(new CreateActionOperation)
         //    ->setNewActionName($input->getArgument('actionName'))
         //    ->setJsonApiSchema()
+        return 0;
     }
 
     /**
