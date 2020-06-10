@@ -7,16 +7,14 @@ use Psr\Log\NullLogger;
 
 trait Loggable
 {
-
-    /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
      * @param LoggerInterface $logger
      *
      * @return static
      */
-    public function setLogger($logger): self
+    public function setLogger(LoggerInterface $logger): self
     {
         $this->logger = $logger;
         return $this;
@@ -27,7 +25,10 @@ trait Loggable
      */
     public function getLogger()
     {
-        return $this->logger ?: $this->logger = new NullLogger;
+        if (!isset($this->logger)) {
+            $this->logger = new NullLogger();
+        }
+        return $this->logger;
     }
 
 }

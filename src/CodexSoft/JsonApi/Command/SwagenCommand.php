@@ -1,4 +1,4 @@
-<?php /** @noinspection SlowArrayOperationsInLoopInspection */
+<?php
 
 namespace CodexSoft\JsonApi\Command;
 

@@ -27,33 +27,29 @@ use Symfony\Component\HttpFoundation\Request;
  */
 abstract class DocumentedFormAction extends DocumentedAction implements SwagenActionExternalFormInterface
 {
+    protected FormFactoryInterface $formFactory;
+    private ?FormInterface $validatedForm = null;
+    protected static bool $allowEmptyForm = false;
+    protected static bool $decodeRequestJson = false;
 
-    /** @var FormFactoryInterface */
-    protected $formFactory;
-
-    /** @var FormInterface */
-    private $validatedForm;
-
-    /** @var string query parameter name, if present, then auto-generated fake response will be sent */
-    protected $fakeRequestQueryParameterName = 'fakeRequest';
-
-    /** @var bool */
-    protected static $allowEmptyForm = false;
-
-    /** @var bool */
-    protected static $decodeRequestJson = false;
+    /** query parameter name, if present, then auto-generated fake response will be sent */
+    protected string $fakeRequestQueryParameterName = 'fakeRequest';
 
     /**
      * @var array default options to be passed into request form
      * allow_extra_fields: whether extra (not declared in RequestForm) fields allowed or not
      */
-    protected $defaultRequestFormOptions = [
+    protected array $defaultRequestFormOptions = [
         'allow_extra_fields' => true
     ];
 
     public function __construct(RequestStack $requestStack, FormFactoryInterface $formFactory)
     {
-        $this->request = $requestStack->getCurrentRequest();
+        $request = $requestStack->getCurrentRequest();
+        if ($request === null) {
+            throw new \InvalidArgumentException('RequestStack is empty, failed to get current Request!');
+        }
+        $this->request = $request;
         $this->formFactory = $formFactory;
         $this->decodeRequestJson($this->request);
     }
@@ -218,12 +214,12 @@ abstract class DocumentedFormAction extends DocumentedAction implements SwagenAc
         $formErrors = $form->getErrors(true);
         $formData = [];
         foreach ($formErrors as $error) {
-            for ($fieldName = [], $field = $error->getOrigin(); $field; $field = $field->getParent()) {
+            for ($fieldNames = [], $field = $error->getOrigin(); $field; $field = $field->getParent()) {
                 if ($field->getName()) {
-                    $fieldName[] = $field->getName();
+                    $fieldNames[] = $field->getName();
                 }
             }
-            $fieldName = implode('.', array_reverse($fieldName));
+            $fieldName = implode('.', array_reverse($fieldNames));
 
             $formData[] = [
                 'field' => $fieldName,

@@ -7,7 +7,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 
 trait ResponseWrappedDataTrait
 {
-    public static $generatingWrappedDataForResponseDefinition = false;
+    public static bool $generatingWrappedDataForResponseDefinition = false;
 
     /**
      * @param bool $generatingWrappedDataForResponseDefinition

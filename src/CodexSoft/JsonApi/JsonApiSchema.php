@@ -11,34 +11,16 @@ use function Stringy\create as str;
 class JsonApiSchema
 {
 
-    /** @var string */
-    private $namespaceActions;
-
-    /** @var string */
-    private $pathToActions;
-
-    /** @var string */
-    private $namespaceForms;
-
-    /** @var string */
-    private $pathToForms;
-
-    /** @var string */
-    public $baseActionClass = DocumentedFormAction::class;
-
-    /** @var string */
-    public $baseActionFormClass = AbstractForm::class;
-
-    /** @var string  */
-    public $fieldHelperClass = Field::class;
-
-    /** @var string  */
-    public $baseSuccessResponseClass = DefaultSuccessResponse::class;
-
-    protected $namespaceBase = 'App\\Domain';
-
-    /** @var string */
-    protected $pathToPsrRoot = '/src';
+    private ?string $namespaceActions = null;
+    private ?string $pathToActions = null;
+    private ?string $namespaceForms = null;
+    private ?string $pathToForms = null;
+    public string $baseActionClass = DocumentedFormAction::class;
+    public string $baseActionFormClass = AbstractForm::class;
+    public string $fieldHelperClass = Field::class;
+    public string $baseSuccessResponseClass = DefaultSuccessResponse::class;
+    protected string $namespaceBase = 'App\\Domain';
+    protected string $pathToPsrRoot = '/src';
 
     /**
      * @param string $domainConfigFile

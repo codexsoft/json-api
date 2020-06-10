@@ -15,11 +15,8 @@ abstract class AbstractField
     /** @var mixed */
     protected $content;
 
-    /** @var array */
-    protected $choicesSourceArray = [];
-
-    /** @var array */
-    protected $options = [];
+    protected array $choicesSourceArray = [];
+    protected array $options = [];
 
     /**
      * Чуть более читабельная конвертация массива (например, используется в Swagen). Пример:

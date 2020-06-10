@@ -1,8 +1,8 @@
-<?php /** @noinspection SlowArrayOperationsInLoopInspection */
+<?php
 
 namespace CodexSoft\JsonApi\Command;
 
-use CodexSoft\JsonApi\JsonApiTools;
+use CodexSoft\JsonApi\JsonApiSchema;
 use CodexSoft\JsonApi\Operations\CreateActionOperation;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
@@ -12,9 +12,13 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CreateActionCommand extends Command
 {
+    private JsonApiSchema $jsonApiSchema;
 
-    /** @var JsonApiTools */
-    private $jsonApiTools;
+    public function __construct(JsonApiSchema $jsonApiSchema, string $name = null)
+    {
+        parent::__construct($name);
+        $this->jsonApiSchema = $jsonApiSchema;
+    }
 
     protected function configure()
     {
@@ -25,9 +29,6 @@ class CreateActionCommand extends Command
             // the short description shown while running "php bin/console list"
             ->setDescription('Generate new action with request and response forms')
 
-            // the full command description shown when running the command with
-            // the "--help" option
-            //->setHelp('This command allows you to automatically generate swagger documentation from symfony forms')
             ->addArgument('actionName', InputArgument::REQUIRED, 'new action name, like app.action.product.add')
             ->addArgument('route', InputArgument::OPTIONAL, 'route for action, like /hello/world')
             ->addOption('style', 's', InputOption::VALUE_REQUIRED, 'style of POST action: handle|invoke', CreateActionOperation::STYLE_HANDLE)
@@ -45,26 +46,14 @@ class CreateActionCommand extends Command
     {
         $output->writeln('Generating action...');
 
-        $this->jsonApiTools->generateAction()
+        (new CreateActionOperation)
+            ->setJsonApiSchema($this->jsonApiSchema)
             ->setNewActionName($input->getArgument('actionName'))
             ->setRoute($input->getArgument('route'))
             ->setStyle($input->getOption('style'))
             ->execute();
-        //(new CreateActionOperation)
-        //    ->setNewActionName($input->getArgument('actionName'))
-        //    ->setJsonApiSchema()
-        return 0;
-    }
 
-    /**
-     * @param JsonApiTools $jsonApiTools
-     *
-     * @return CreateActionCommand
-     */
-    public function setJsonApiTools(JsonApiTools $jsonApiTools): CreateActionCommand
-    {
-        $this->jsonApiTools = $jsonApiTools;
-        return $this;
+        return 0;
     }
 
 }

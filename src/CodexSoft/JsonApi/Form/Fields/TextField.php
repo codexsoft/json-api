@@ -13,7 +13,7 @@ class TextField extends AbstractField
      * is true by default for compatibility reasons
      * todo: make false by default in next version
      */
-    private static $generateFakeNames = true;
+    private static bool $generateFakeNames = true;
 
     public function import(FormBuilderInterface $builder, string $name)
     {

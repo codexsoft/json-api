@@ -6,8 +6,7 @@ use Throwable;
 
 class FormValidationFailedException extends \Exception
 {
-    /** @var array */
-    private $extraData = [];
+    private array $extraData = [];
 
     public function __construct($message = '', $code = 0, array $extraData = [], Throwable $previous = null)
     {

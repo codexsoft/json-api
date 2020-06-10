@@ -13,14 +13,12 @@ class FormElementDoc
     public const TYPE_FORM = 2;
     public const TYPE_SCALAR = 3;
 
-    /** @var int */
-    public $type;
+    public ?int $type = null;
 
-    /** @var string  */
-    public $fieldFormTypeClass;
+    public ?string $fieldFormTypeClass = null;
 
     /** @var \Symfony\Component\Validator\Constraint[] */
-    public $constraints = [];
+    public array $constraints = [];
 
     // analyzed constraints
 
@@ -34,22 +32,17 @@ class FormElementDoc
     /** @var \Symfony\Component\Validator\Constraint[] */
     public $collectionConstraints = [];
 
-    /** @var bool */
-    public $exclusiveMinimum;
+    public ?bool $exclusiveMinimum = null;
     public $minimum;
 
-    /** @var bool */
-    public $exclusiveMaximum;
+    public ?bool $exclusiveMaximum = null;
     public $maximum;
 
-    /** @var bool */
-    public $isRequired;
+    public ?bool $isRequired = null;
 
-    /** @var bool */
-    public $isNotBlank;
+    public ?bool $isNotBlank = null;
 
-    /** @var bool */
-    public $isNotNull;
+    public ?bool $isNotNull = null;
 
     // options
 
@@ -60,7 +53,7 @@ class FormElementDoc
     /** @var string  */
     public $collectionItemsClass; // can be scalar or form
 
-    public $fieldReferencesToFormClass; // must be form
+    public ?string $fieldReferencesToFormClass = null; // must be form
 
     public function isCollection(): bool
     {

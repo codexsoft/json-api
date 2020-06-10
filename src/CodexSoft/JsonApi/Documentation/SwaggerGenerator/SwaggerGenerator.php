@@ -40,8 +40,7 @@ class SwaggerGenerator
         MixedType::class => 'mixed',
     ];
 
-    /** @var ApiDoc */
-    private $apiDoc;
+    private ApiDoc $apiDoc;
 
     /**
      * SwaggerGenerator constructor.

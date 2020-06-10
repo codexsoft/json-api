@@ -3,59 +3,88 @@ namespace CodexSoft\JsonApi\Operations;
 
 use CodexSoft\Code\Classes\Classes;
 use CodexSoft\Code\Strings\Strings;
-use CodexSoft\OperationsSystem\Exception\OperationException;
-use CodexSoft\OperationsSystem\Operation;
 use CodexSoft\JsonApi\JsonApiSchema;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use function Stringy\create as str;
 use const CodexSoft\Shortcut\TAB;
 
-/**
- * Class CreateActionOperation
- * todo: Write description — what this operation for
- * @method void execute() todo: change void to handle() method return type if other
- */
-class CreateActionOperation extends Operation
+class CreateActionOperation implements LoggerAwareInterface
 {
-    public const ID = 'e115e45a-aa2a-4473-a4e0-9e4398cb3215';
     public const STYLE_HANDLE = 'handle';
     public const STYLE_INVOKE = 'invoke';
 
-    protected const ERROR_PREFIX = 'CreateActionOperation cannot be completed: ';
+    // arguments
+    private string $newActionName;
+    private ?string $route;
+    private JsonApiSchema $jsonApiSchema;
+    private bool $allowEmptyForm = false;
+    private string $style = self::STYLE_HANDLE;
+    private LoggerInterface $logger;
 
-    /** @var string */
-    private $newActionName;
+    // privates
+    private string $fqnActionClass;
+    private string $fqnActionFormClass;
+    private string $fqnActionResponseClass;
+    private string $actionNamespace;
+    private string $actionDir;
+    private Filesystem $fs;
 
-    /** @var string */
-    private $fqnActionClass;
+    /**
+     * @return void
+     */
+    public function execute(): void
+    {
+        if (!isset($this->newActionName) || !$this->newActionName) {
+            throw new \InvalidArgumentException('Action name cannot be blank');
+        }
 
-    /** @var string */
-    private $fqnActionFormClass;
+        if (!isset($this->jsonApiSchema)) {
+            throw new \InvalidArgumentException('Required jsonApiSchema is not provided');
+        }
 
-    /** @var string */
-    private $fqnActionResponseClass;
+        if (!isset($this->logger)) {
+            $this->logger = new NullLogger();
+        }
 
-    /** @var string */
-    private $actionNamespace;
+        $this->fs = new Filesystem();
+        $this->logger->debug('Actions path: '.$this->jsonApiSchema->getPathToActions());
 
-    /** @var string */
-    private $actionDir;
+        $actionClass = (string) str($this->newActionName)->replace('/','\\')->replace('.','\\');
+        $actionClassParts = explode('\\',$actionClass);
+        \array_walk($actionClassParts, function (&$part) {
+            $part = \ucfirst($part);
+        });
+        $actionClass = implode('\\',$actionClassParts);
 
-    /** @var string|null */
-    private $route;
+        $actionNamespaceParts = $actionClassParts;
+        \array_pop($actionNamespaceParts);
+        $actionNamespace = implode('\\',$actionNamespaceParts);
 
-    /** @var JsonApiSchema */
-    private $jsonApiSchema;
+        $baseActionsNamespace = $this->jsonApiSchema->getNamespaceActions();
 
-    /** @var Filesystem */
-    private $fs;
+        if ($actionNamespace) {
+            $this->fqnActionClass = $baseActionsNamespace.'\\'.$actionClass;
+        } else {
+            $this->fqnActionClass = $baseActionsNamespace.$actionClass;
+        }
 
-    /** @var bool  */
-    private $allowEmptyForm = false;
+        $this->fqnActionFormClass = JsonApiSchema::generateActionFormClass($this->fqnActionClass);
+        $this->fqnActionResponseClass = JsonApiSchema::generateResponseFormClass($this->fqnActionClass);
 
-    /** @var string */
-    private $style = self::STYLE_HANDLE;
+        $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
+        $this->actionNamespace = Classes::getNamespace($this->fqnActionClass);
+
+        $this->logger->debug('Action class: '.$this->fqnActionClass);
+
+        $this->writeActionClassFile();
+        $this->writeActionFormClassFile();
+        $this->writeActionResponseClassFile();
+    }
 
     /**
      * @param string $route
@@ -88,55 +117,6 @@ class CreateActionOperation extends Operation
     {
         $this->style = $style;
         return $this;
-    }
-
-    /**
-     * @throws OperationException
-     */
-    protected function validateInputData(): void
-    {
-        $this->assert($this->newActionName, 'Action name cannot be blank');
-    }
-
-    /**
-     * @return void
-     * @throws OperationException
-     */
-    protected function handle(): void
-    {
-        $this->fs = new Filesystem();
-        $this->getLogger()->debug('Actions path: '.$this->jsonApiSchema->getPathToActions());
-
-        $actionClass = (string) str($this->newActionName)->replace('/','\\')->replace('.','\\');
-        $actionClassParts = explode('\\',$actionClass);
-        \array_walk($actionClassParts, function (&$part) {
-            $part = \ucfirst($part);
-        });
-        $actionClass = implode('\\',$actionClassParts);
-
-        $actionNamespaceParts = $actionClassParts;
-        \array_pop($actionNamespaceParts);
-        $actionNamespace = implode('\\',$actionNamespaceParts);
-
-        $baseActionsNamespace = $this->jsonApiSchema->getNamespaceActions();
-
-        if ($actionNamespace) {
-            $this->fqnActionClass = $baseActionsNamespace.'\\'.$actionClass;
-        } else {
-            $this->fqnActionClass = $baseActionsNamespace.$actionClass;
-        }
-
-        $this->fqnActionFormClass = JsonApiSchema::generateActionFormClass($this->fqnActionClass);
-        $this->fqnActionResponseClass = JsonApiSchema::generateResponseFormClass($this->fqnActionClass);
-
-        $this->actionDir = $this->jsonApiSchema->getPathToActions().'/'.Strings::bs2s($actionNamespace);
-        $this->actionNamespace = Classes::getNamespace($this->fqnActionClass);
-
-        $this->getLogger()->debug('Action class: '.$this->fqnActionClass);
-
-        $this->writeActionClassFile();
-        $this->writeActionFormClassFile();
-        $this->writeActionResponseClassFile();
     }
 
     /**
@@ -267,7 +247,7 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionFile)) {
             throw new \RuntimeException("Action file $actionFile already exists!");
         }
-        $this->getLogger()->debug("Will be written to $actionFile");
+        $this->logger->debug("Will be written to $actionFile");
 
         switch ($this->style) {
             case self::STYLE_INVOKE:
@@ -287,7 +267,7 @@ class CreateActionOperation extends Operation
         $baseFormClass = $this->jsonApiSchema->baseActionFormClass;
         $fieldClass = $this->jsonApiSchema->fieldHelperClass;
         $swagenInterface = \CodexSoft\JsonApi\Documentation\Collector\Interfaces\SwagenInterface::class;
-        $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
+        $formBuilderInterface = FormBuilderInterface::class;
 
         $code = [
             '<?php',
@@ -325,7 +305,7 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionFormFile)) {
             throw new \RuntimeException("Action form file $actionFormFile already exists!");
         }
-        $this->getLogger()->debug("Will be written to $actionFormFile");
+        $this->logger->debug("Will be written to $actionFormFile");
 
         $this->fs->dumpFile($actionFormFile, $this->generateActionFormClassCode());
     }
@@ -333,7 +313,7 @@ class CreateActionOperation extends Operation
     protected function generateActionResponseFormClassCode(): string
     {
         $fieldClass = $this->jsonApiSchema->fieldHelperClass;
-        $formBuilderInterface = \Symfony\Component\Form\FormBuilderInterface::class;
+        $formBuilderInterface = FormBuilderInterface::class;
         $baseSuccessResponseClass = $this->jsonApiSchema->baseSuccessResponseClass;
 
         $code = [
@@ -383,9 +363,19 @@ class CreateActionOperation extends Operation
         if (\file_exists($actionResponseFile)) {
             throw new \RuntimeException("Action response file $actionResponseFile already exists!");
         }
-        $this->getLogger()->debug("Will be written to $actionResponseFile");
+        $this->logger->debug("Will be written to $actionResponseFile");
 
         $this->fs->dumpFile($actionResponseFile, $this->generateActionResponseFormClassCode());
     }
 
+    /**
+     * @param LoggerInterface $logger
+     *
+     * @return static
+     */
+    public function setLogger(LoggerInterface $logger): self
+    {
+        $this->logger = $logger;
+        return $this;
+    }
 }

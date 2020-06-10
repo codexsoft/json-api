@@ -11,14 +11,10 @@ use Symfony\Component\Routing\Router;
 
 class ApiDocCollector
 {
-
     use Loggable;
 
-    /** @var Router */
-    private $router;
-
-    /** @var FormFactory */
-    private $formFactory;
+    private Router $router;
+    private FormFactory $formFactory;
 
     public function __construct(Router $router, FormFactory $formFactory, LoggerInterface $logger = null)
     {

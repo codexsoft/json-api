@@ -4,14 +4,11 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 
 class FormDoc
 {
-
-    /** @var string */
-    public $class;
+    public ?string $class = null;
 
     /** @var string[] */
-    public $requiredFields = [];
+    public array $requiredFields = [];
 
     /** @var FormElementDoc[]  */
-    public $items = [];
-
+    public array $items = [];
 }

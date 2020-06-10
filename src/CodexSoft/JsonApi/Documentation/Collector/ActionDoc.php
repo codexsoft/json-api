@@ -9,29 +9,20 @@ use Symfony\Component\Routing\Route;
 
 class ActionDoc
 {
-
-    /** @var Route */
-    public $route;
-
-    /** @var CompiledRoute */
-    public $compiledRoute;
-
-    /** @var string */
-    public $actionClass;
-
-    /** @var string */
-    public $inputFormClass;
+    public ?Route $route = null;
+    public ?CompiledRoute $compiledRoute = null;
+    public ?string $actionClass = null;
+    public ?string $inputFormClass = null;
 
     /** @var string[] */
-    public $tags = [];
+    public array $tags = [];
 
-    /** @var string */
-    public $description;
+    public ?string $description = null;
 
-    /** @var string todo: $route->getPath()? */
-    public $path;
+    /** todo: $route->getPath()? */
+    public ?string $path = null;
 
     /** @var array [httpStatusCode => Description] */
-    public $responses = [];
+    public array $responses = [];
 
 }

@@ -15,9 +15,7 @@ use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 abstract class AbstractAction extends AbstractController
 {
-
-    /** @var Request  */
-    protected $request;
+    protected Request $request;
 
     abstract public function __invoke(): Response;
 

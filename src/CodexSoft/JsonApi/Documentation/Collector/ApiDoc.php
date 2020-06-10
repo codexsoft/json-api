@@ -4,14 +4,12 @@ namespace CodexSoft\JsonApi\Documentation\Collector;
 
 class ApiDoc
 {
-
     /** @var ResponseDoc[] */
-    public $responses = [];
+    public array $responses = [];
 
     /** @var ActionDoc[] */
-    public $actions = [];
+    public array $actions = [];
 
     /** @var FormDoc[] */
-    public $forms = [];
-
+    public array $forms = [];
 }

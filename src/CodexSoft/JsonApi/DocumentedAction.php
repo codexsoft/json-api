@@ -38,9 +38,9 @@ abstract class DocumentedAction extends AbstractAction implements SwagenActionIn
 
     public const TAG_UNCATEGORIZED = 'Uncategorized';
 
-    protected static $inputStatus = self::STATE_INPUT_NOT_IMPLEMENTED;
-    protected static $outputStatus = self::STATE_OUTPUT_NOT_IMPLEMENTED;
-    protected static $swagenDescription = '';
+    protected static string $inputStatus = self::STATE_INPUT_NOT_IMPLEMENTED;
+    protected static string $outputStatus = self::STATE_OUTPUT_NOT_IMPLEMENTED;
+    protected static string $swagenDescription = '';
 
     /**
      * Для разработчиков, которые будут работать с документацией к API, важно понимать статус

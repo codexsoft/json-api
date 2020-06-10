@@ -2,15 +2,11 @@
 
 namespace CodexSoft\JsonApi\Form\Fields;
 
-use Symfony\Component\Form\Extension\Core\Type;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Validator\Constraints as Assert;
 
 class CustomField extends AbstractField
 {
-
-    /** @var string */
-    protected $fieldClass;
+    protected string $fieldClass;
 
     public function __construct(string $fieldClass, string $label = '', array $constraints = [], array $options = [])
     {

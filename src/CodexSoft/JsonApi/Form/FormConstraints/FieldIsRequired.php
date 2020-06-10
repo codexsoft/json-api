@@ -6,5 +6,5 @@ use Symfony\Component\Validator\Constraint;
 
 class FieldIsRequired extends Constraint
 {
-    public $message = 'Required field missing.';
+    public string $message = 'Required field missing.';
 }

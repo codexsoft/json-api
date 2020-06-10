@@ -20,8 +20,7 @@ class ActionDocCollector
 
     use Loggable;
 
-    /** @var string */
-    private $pathPrefixToRemove;
+    private ?string $pathPrefixToRemove = null;
 
     public function __construct(LoggerInterface $logger = null)
     {

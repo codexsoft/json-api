@@ -13,9 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type;
 
 class FormBuilderHelper
 {
-
-    /** @var FormBuilderInterface */
-    private $builder;
+    private ?FormBuilderInterface $builder = null;
 
     /**
      * @param FormBuilderInterface $builder

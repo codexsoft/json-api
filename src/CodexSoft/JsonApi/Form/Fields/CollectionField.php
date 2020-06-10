@@ -9,8 +9,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 class CollectionField extends AbstractField
 {
 
-    /** @var string */
-    protected $itemClass;
+    protected string $itemClass;
 
     public function __construct(string $itemClass, string $label = '', array $constraints = [], array $options = [])
     {

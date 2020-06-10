@@ -17,21 +17,12 @@ use Symfony\Component\Form\Extension\Core\Type;
 
 class SymfonyFormExampleGenerator
 {
+    private bool $preferDefaultValue = false;
 
-    /** @var bool */
-    private $preferDefaultValue = false;
-
-    /** @var FormFactoryInterface */
-    private $formFactory;
-
-    /** @var \Faker\Factory */
-    private $faker;
-
-    /** @var LoggerInterface */
-    private $logger;
-
-    /** @var bool  */
-    private $skipNotReqiredElements = false;
+    private FormFactoryInterface $formFactory;
+    private \Faker\Factory $faker;
+    private LoggerInterface $logger;
+    private bool $skipNotReqiredElements = false;
 
     public function __construct()
     {

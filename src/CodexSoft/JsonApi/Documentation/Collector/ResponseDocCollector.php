@@ -14,15 +14,13 @@ use function Stringy\create as str;
 
 class ResponseDocCollector
 {
-
     use Loggable;
 
-    /** @var FormFactory */
-    private $formFactory;
+    private FormFactory $formFactory;
 
     public function __construct(FormFactory $formFactory, LoggerInterface $logger = null)
     {
-        $this->logger = $logger;
+        $logger && $this->logger = $logger;
         $this->formFactory = $formFactory;
     }
 

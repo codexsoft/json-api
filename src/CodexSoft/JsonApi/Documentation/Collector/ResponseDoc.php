@@ -6,23 +6,12 @@ use function Stringy\create as str;
 
 class ResponseDoc
 {
-    /** @var string */
-    public $class;
-
-    /** @var string */
-    public $description;
-
-    /** @var string */
-    public $formClass;
-
-    /** @var FormDoc because of optional data-wrapper in response, form should be generated */
-    public $formClassDoc;
-
-    /** @var string */
-    public $example;
-
-    /** @var string */
-    public $title;
+    public ?string $class = null;
+    public ?string $description = null;
+    public ?string $formClass = null;
+    public ?FormDoc $formClassDoc = null;
+    public ?string $example = null;
+    public ?string $title = null;
 
     public static function generateTitleStatic(string $suggestedResponseTitle): string
     {

@@ -24,8 +24,7 @@ class FormDocCollector
 
     public const OPTIONS_FIELD_NAME = 'data_collector/passed_options';
 
-    /** @var FormFactory */
-    private $formFactory;
+    private FormFactory $formFactory;
 
     public function __construct(FormFactory $formFactory, LoggerInterface $logger = null)
     {

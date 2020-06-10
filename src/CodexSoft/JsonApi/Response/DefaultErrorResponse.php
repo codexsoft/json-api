@@ -9,14 +9,14 @@ use Symfony\Component\Form\FormBuilderInterface;
 class DefaultErrorResponse extends AbstractBaseResponse
 {
 
-    /** @var string|null custom error message */
-    protected $errorMessage;
+    /** custom error message */
+    protected ?string $errorMessage = null;
 
-    /** @var \Throwable source of the error — for debug and logging purposes */
-    protected $exception;
+    /** source of the error — for debug and logging purposes */
+    protected ?\Throwable $exception = null;
 
-    /** @var array extra arrayed data to include in response JSON body */
-    protected $extraData = [];
+    /** extra arrayed data to include in response JSON body */
+    protected array $extraData = [];
 
     /**
      * ErrorResponse constructor.
@@ -30,7 +30,7 @@ class DefaultErrorResponse extends AbstractBaseResponse
     public function __construct(
         ?string $errorMessage = 'Unknown error',
         $statusCode = Response::HTTP_INTERNAL_SERVER_ERROR,
-        \Throwable $exception = null,
+        ?\Throwable $exception = null,
         array $extraData = []
     ) {
         $this->errorMessage = $errorMessage ?: Response::$statusTexts[(int) $statusCode];
@@ -69,7 +69,7 @@ class DefaultErrorResponse extends AbstractBaseResponse
     /**
      * @return \Throwable
      */
-    public function getException(): \Throwable
+    public function getException(): ?\Throwable
     {
         return $this->exception;
     }

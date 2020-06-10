@@ -7,11 +7,9 @@ use CodexSoft\JsonApi\Helper\Loggable;
 
 class TypeScriptGenerator
 {
-
     use Loggable;
 
-    /** @var ApiDoc */
-    private $apiDoc;
+    private ApiDoc $apiDoc;
 
     /**
      * SwaggerGenerator constructor.
@@ -28,6 +26,12 @@ class TypeScriptGenerator
         foreach ($this->apiDoc->forms as $formDoc) {
             \array_push($lines, ...$this->generateFormAsParameterAndDefinition($formDoc));
         }
+        return [];
+    }
+
+    private function generateFormAsParameterAndDefinition(\CodexSoft\JsonApi\Documentation\Collector\FormDoc $formDoc)
+    {
+        // todo
     }
 
 }
