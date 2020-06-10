@@ -18,7 +18,7 @@
         "codexsoft/code-classes": "^1.0",
         "codexsoft/code-files": "^1.0",
         "codexsoft/code-strings": "^1.0",
-        "voku/stringy": "^6.3",
+        "voku/stringy": "^6.2",
         "codexsoft/shortcut-tab-constant": "^1.0"
     },
     "require-dev": {
