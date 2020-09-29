@@ -7,7 +7,7 @@ use Psr\Log\NullLogger;
 
 trait Loggable
 {
-    private LoggerInterface $logger;
+    private ?LoggerInterface $logger;
 
     /**
      * @param LoggerInterface $logger
