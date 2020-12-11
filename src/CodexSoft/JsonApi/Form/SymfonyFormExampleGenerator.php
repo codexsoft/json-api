@@ -6,6 +6,7 @@ use CodexSoft\DateAndTime\DateAndTime;
 use CodexSoft\JsonApi\Form\Type\BooleanType\BooleanType;
 use CodexSoft\JsonApi\Form\Type\JsonType\JsonType;
 use CodexSoft\JsonApi\Form\Type\MixedType\MixedType;
+use CodexSoft\JsonApi\Helper\Minifaker;
 use CodexSoft\JsonApi\Response\ResponseWrappedDataInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -20,13 +21,13 @@ class SymfonyFormExampleGenerator
     private bool $preferDefaultValue = false;
 
     private FormFactoryInterface $formFactory;
-    private \Faker\Factory $faker;
+    //private \Faker\Factory $faker;
     private LoggerInterface $logger;
     private bool $skipNotReqiredElements = false;
 
     public function __construct()
     {
-        $this->faker = \Faker\Factory::create( 'ru_RU' );
+        //$this->faker = \Faker\Factory::create( 'ru_RU' );
         $this->logger = new NullLogger;
         $this->formFactory = self::generateFormFactory();
     }
@@ -268,31 +269,31 @@ class SymfonyFormExampleGenerator
         }
 
         if ($innerType instanceof Type\IntegerType) {
-            return $this->faker->numberBetween($min,$max);
+            return Minifaker::numberBetween($min,$max);
         }
 
         if ($innerType instanceof Type\NumberType) {
-            return $this->faker->randomFloat(6,$min,$max);
+            return Minifaker::randomFloat(6,$min,$max);
         }
 
         if ($innerType instanceof Type\PercentType) {
-            return $this->faker->randomFloat(null,0,1);
+            return Minifaker::randomFloat(null,0,1);
         }
 
         if ($innerType instanceof Type\TextType || $innerType instanceof Type\TextareaType) {
             if ($minLength === 0) {
-                return $this->faker->realText($maxLength);
+                return Minifaker::lexify();
             }
             // todo: as faker has not minLength parameter from text out of the box, currently using password...
-            return $this->faker->password($minLength, $maxLength);
+            return Minifaker::lexify(\str_repeat('?', $maxLength));
         }
 
         if ($innerType instanceof Type\EmailType) {
-            return $this->faker->email;
+            return Minifaker::lexify().'@example.com';
         }
 
         if ($innerType instanceof Type\UrlType) {
-            return $this->faker->url;
+            return Minifaker::lexify().'.com';
         }
 
         if ($innerType instanceof BooleanType) {
@@ -305,20 +306,23 @@ class SymfonyFormExampleGenerator
         }
 
         if ($innerType instanceof Type\CheckboxType) {
-            return $this->faker->boolean;
+            return true;
+            //return Minifaker::boolean;
         }
 
         if ($innerType instanceof Type\DateType) {
-            return $this->faker->date(DateAndTime::FORMAT_YMD);
+            return '2020-10-20';
+            //return Minifaker::date(DateAndTime::FORMAT_YMD);
         }
 
         if ($innerType instanceof Type\TimeType) {
-            return $this->faker->time(DateAndTime::FORMAT_HOURMIN);
+            return '02:42';
+            //return Minifaker::time(DateAndTime::FORMAT_HOURMIN);
         }
 
         if ($innerType instanceof Type\DateTimeType) {
             // todo: timestamp?
-            return $this->faker->dateTime->format(DateAndTime::FORMAT_YMD_HIS);
+            return (new \DateTime())->format(DateAndTime::FORMAT_YMD_HIS);
             //return 'DateTimeType not implemented';
         }
 
